@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "FCG.TechChallenge.Jogos.Functions": {
+      "commandName": "Project",
+      "commandLineArgs": "--port 7229",
+      "launchBrowser": false
+    }
+  }
+}
