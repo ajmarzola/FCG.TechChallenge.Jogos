@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Game
 {
-    internal class Game
+    internal partial class Game
     {
     }
 }
