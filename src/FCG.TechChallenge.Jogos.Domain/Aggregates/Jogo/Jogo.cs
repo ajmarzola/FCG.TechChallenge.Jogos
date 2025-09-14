@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Domain.Events
+namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
 {
-    internal class GameCreated
+    internal partial class Jogo
     {
     }
 }

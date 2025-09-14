@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Application.Queries.Games
+namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
 {
-    internal class GetRecommendationsQuery
+    internal partial class Jogo
     {
     }
 }

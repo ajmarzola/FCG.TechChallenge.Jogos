@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
+namespace FCG.TechChallenge.Jogos.Application.DTOs
 {
-    internal class GameIndexer
+    internal class JogoDto
     {
     }
 }

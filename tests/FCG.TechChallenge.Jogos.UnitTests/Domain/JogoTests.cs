@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Game
+namespace FCG.TechChallenge.Jogos.UnitTests.Domain
 {
-    internal partial class Game
+    internal class JogoTests
     {
     }
 }

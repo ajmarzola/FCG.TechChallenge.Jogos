@@ -7,11 +7,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Aggregates\Game\Game.State.cs" />
+    <Compile Remove="Aggregates\Jogo\Jogo.State.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Aggregates\Game\Game.State.cs" />
+    <None Include="Aggregates\Jogo\Jogo.State.cs" />
   </ItemGroup>
 
 </Project>

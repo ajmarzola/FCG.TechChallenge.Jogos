@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Application.DTOs
+namespace FCG.TechChallenge.Jogos.Application.Queries.Jogos
 {
-    internal class GameItemDto
+    internal class GetRecommendationsQuery
     {
     }
 }

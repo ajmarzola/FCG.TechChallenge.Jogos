@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Application.Commands.Games.CreateGame
+namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo
 {
-    internal class CreateGameValidator
+    internal class CreateJogoCommand
     {
     }
 }

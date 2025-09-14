@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.UnitTests.Application
+namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
 {
-    internal class CreateGameHandlerTests
+    internal class JogoReadRepository
     {
     }
 }

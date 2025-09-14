@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Game
+namespace FCG.TechChallenge.Jogos.Application.Queries.Jogos
 {
-    class Game
+    internal class GetJogoByIdQuery
     {
     }
 }
