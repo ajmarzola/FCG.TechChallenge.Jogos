@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
+namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.DeleteJogo
 {
-    internal partial class Jogo
+    internal class DeleteJogoValidator
     {
     }
 }
