@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
 {
-    internal class JogoReadRepository
+    public class JogoReadRepository
     {
     }
 }

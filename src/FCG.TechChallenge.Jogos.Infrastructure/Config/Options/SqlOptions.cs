@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Config.Options
 {
-    internal class SqlOptions
+    public class SqlOptions
     {
     }
 }

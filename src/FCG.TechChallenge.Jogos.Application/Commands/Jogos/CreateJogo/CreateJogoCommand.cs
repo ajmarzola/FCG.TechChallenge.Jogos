@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo
 {
-    internal class CreateJogoCommand
-    {
-    }
+    public sealed record CreateJogoCommand(string Nome, string Descricao, decimal Preco, string Categoria) : IRequest<Guid>;
 }

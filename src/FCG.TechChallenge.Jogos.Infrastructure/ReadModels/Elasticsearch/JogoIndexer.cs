@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 {
-    internal class JogoIndexer
+    public class JogoIndexer
     {
     }
 }

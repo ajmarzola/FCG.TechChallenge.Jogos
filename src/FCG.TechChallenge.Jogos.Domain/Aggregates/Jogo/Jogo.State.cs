@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
 {
-    internal partial class Jogo
+    public sealed partial class Jogo
     {
     }
 }

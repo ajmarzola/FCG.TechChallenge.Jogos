@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FCG.TechChallenge.Jogos.Application.DTOs;
+using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Queries.Users
 {
-    internal class GetRecommendationsQuery
-    {
-    }
+    public sealed record GetRecommendationsQuery(Guid UserId) : IRequest<IReadOnlyList<JogoDto>>;
 }

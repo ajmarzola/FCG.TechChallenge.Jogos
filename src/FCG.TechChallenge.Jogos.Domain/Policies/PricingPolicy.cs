@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.Policies
 {
-    internal class PricingPolicy
+    public class PricingPolicy
     {
     }
 }

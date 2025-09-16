@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogo
 {
-    internal class UpdateJogoCommand
+    public class UpdateJogoCommand
     {
     }
 }

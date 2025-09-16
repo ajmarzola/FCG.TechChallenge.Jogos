@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore.Upcasters
 {
-    internal class JogoCreatedUpcaster
+    public class JogoCreatedUpcaster
     {
     }
 }

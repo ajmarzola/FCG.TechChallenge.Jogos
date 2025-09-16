@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.Events
 {
-    internal class PurchaseRequested
+    public class PurchaseRequested
     {
     }
 }

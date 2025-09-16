@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Application.Behaviors
 {
-    internal class TracingBehavior
+    public class TracingBehavior
     {
     }
 }

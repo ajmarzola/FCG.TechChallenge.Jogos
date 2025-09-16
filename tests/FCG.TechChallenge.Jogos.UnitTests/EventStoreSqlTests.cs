@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.UnitTests
 {
-    internal class EventStoreSqlTests
+    public class EventStoreSqlTests
     {
     }
 }

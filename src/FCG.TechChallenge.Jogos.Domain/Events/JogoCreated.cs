@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FCG.TechChallenge.Jogos.Domain.Events
+﻿namespace FCG.TechChallenge.Jogos.Domain.Events
 {
-    internal class JogoCreated
-    {
-    }
+    public sealed record JogoCreated(Guid JogoId, string Nome, string Descricao, decimal Preco, string Categoria) : DomainEvent("JogoCreated", 1);
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Observability
 {
-    internal class OpenTelemetryConfig
+    public class OpenTelemetryConfig
     {
     }
 }

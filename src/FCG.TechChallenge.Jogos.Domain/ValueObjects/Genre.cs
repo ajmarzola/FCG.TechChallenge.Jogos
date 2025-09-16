@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.ValueObjects
 {
-    internal class Genre
+    public class Genre
     {
     }
 }

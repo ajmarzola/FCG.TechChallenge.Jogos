@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Application.DTOs
 {
-    internal class JogoItemDto
+    public class JogoItemDto
     {
     }
 }

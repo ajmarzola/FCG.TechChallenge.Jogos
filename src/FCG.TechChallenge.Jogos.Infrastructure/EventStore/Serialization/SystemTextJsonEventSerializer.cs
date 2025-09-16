@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore.Serialization
 {
-    internal class SystemTextJsonEventSerializer
+    public class SystemTextJsonEventSerializer
     {
     }
 }

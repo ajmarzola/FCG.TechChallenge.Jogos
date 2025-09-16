@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.UnitTests.Domain
 {
-    internal class JogoTests
+    public class JogoTests
     {
     }
 }

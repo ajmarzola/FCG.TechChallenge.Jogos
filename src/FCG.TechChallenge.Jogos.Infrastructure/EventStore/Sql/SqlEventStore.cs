@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore.Sql
 {
-    internal class SqlEventStore
+    public class SqlEventStore
     {
     }
 }

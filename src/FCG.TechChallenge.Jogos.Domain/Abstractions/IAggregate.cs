@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.Abstractions
 {
-    internal interface IAggregate
+    public interface IAggregate
     {
     }
 }

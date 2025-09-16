@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Application.Queries.Users
 {
-    internal class GetUserLibraryQuery
+    public class GetUserLibraryQuery
     {
     }
 }

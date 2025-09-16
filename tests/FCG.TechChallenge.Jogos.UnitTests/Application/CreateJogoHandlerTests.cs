@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.UnitTests.Application
 {
-    internal class CreateJogoHandlerTests
+    public class CreateJogoHandlerTests
     {
     }
 }

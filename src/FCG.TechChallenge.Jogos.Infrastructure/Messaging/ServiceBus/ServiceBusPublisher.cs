@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus
 {
-    internal class ServiceBusPublisher
+    public class ServiceBusPublisher
     {
     }
 }

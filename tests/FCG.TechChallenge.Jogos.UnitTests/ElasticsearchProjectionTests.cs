@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.UnitTests
 {
-    internal class ElasticsearchProjectionTests
+    public class ElasticsearchProjectionTests
     {
     }
 }

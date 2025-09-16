@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FCG.TechChallenge.Jogos.Application.DTOs;
+using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Queries.Jogos
 {
-    internal class GetJogoByIdQuery
-    {
-    }
+    public sealed record GetJogoByIdQuery(Guid Id) : IRequest<JogoDto?>;
 }

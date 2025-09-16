@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
 {
-    internal class OutboxDispatcher
+    public class OutboxDispatcher
     {
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Application.Abstractions
 {
-    internal class IEventStore
+    public class IEventStore
     {
     }
 }

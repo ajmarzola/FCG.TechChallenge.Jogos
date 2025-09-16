@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Functions.CompositionRoot
 {
-    internal class DependencyInjection
+    public class DependencyInjection
     {
     }
 }
