@@ -1,4 +1,5 @@
-﻿using FCG.TechChallenge.Jogos.Application.DTOs;
+﻿using FCG.TechChallenge.Jogos.Application.Common;
+using FCG.TechChallenge.Jogos.Application.DTOs;
 using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Queries.Jogos

@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Application.Abstractions
 {
-    public class IOutbox
+    public interface IOutbox
     {
+        Task EnqueueAsync(string type, string payload, CancellationToken ct);
     }
 }
