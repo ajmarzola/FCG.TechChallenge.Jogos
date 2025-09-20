@@ -36,7 +36,7 @@ namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
                 throw new InvalidOperationException("Preço inválido.");
             }
 
-            if (Retirado)
+            if (Excluido)
             {
                 throw new InvalidOperationException("Jogo retirado.");
             }
@@ -56,7 +56,7 @@ namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
                 throw new InvalidOperationException("Preço inválido.");
             }
 
-            if (Retirado)
+            if (Excluido)
             {
                 throw new InvalidOperationException("Jogo retirado.");
             }
@@ -71,7 +71,7 @@ namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
 
         public IEnumerable<DomainEvent> DecideDeletar()
         {
-            if (Retirado)
+            if (Excluido)
             {
                 yield break;
             }

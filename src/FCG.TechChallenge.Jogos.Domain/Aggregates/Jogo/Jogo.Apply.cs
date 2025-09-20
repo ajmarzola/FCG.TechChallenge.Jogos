@@ -18,12 +18,12 @@ namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
         };
 
         private Jogo Apply(JogoCreated e)
-        { Id = e.JogoId; Nome = e.Nome; Descricao = e.Descricao; Preco = e.Preco; Categoria = e.Categoria; Retirado = false; return this; }
+        { Id = e.JogoId; Nome = e.Nome; Descricao = e.Descricao; Preco = e.Preco; Categoria = e.Categoria; Excluido = false; return this; }
 
         private Jogo Apply(JogoPriceChanged e)
         { Preco = e.NovoPreco; return this; }
 
         private Jogo Apply(JogoRetired e)
-        { Retirado = true; return this; }
+        { Excluido = true; return this; }
     }
 }

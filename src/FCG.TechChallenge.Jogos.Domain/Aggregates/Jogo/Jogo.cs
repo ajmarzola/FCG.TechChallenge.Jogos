@@ -12,6 +12,6 @@
         
         public string Categoria { get; private set; } = string.Empty;
         
-        public bool Retirado { get; private set; }
+        public bool Excluido { get; private set; }
     }
 }
