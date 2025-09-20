@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogo
 {
-    public class UpdateJogoCommand
-    {
-    }
+    public sealed record UpdateJogoCommand(Guid JogoId, string Nome, string Descricao, decimal Preco, string Categoria) : IRequest<Guid>;
 }

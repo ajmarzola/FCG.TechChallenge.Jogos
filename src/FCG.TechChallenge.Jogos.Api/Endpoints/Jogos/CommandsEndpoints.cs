@@ -10,7 +10,7 @@ namespace FCG.TechChallenge.Jogos.Api.Endpoints.Jogos
         {
             app.MapPost("/jogos", async (CreateJogoCommand cmd, ISender sender) =>
             {
-                var id = await sender.Send(cmd);
+                Guid id = await sender.Send(cmd);
                 return Results.Created($"/jogos/{id}", new { id });
             });
 

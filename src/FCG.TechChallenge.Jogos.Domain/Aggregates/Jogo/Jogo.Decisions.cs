@@ -1,9 +1,4 @@
 ﻿using FCG.TechChallenge.Jogos.Domain.Events;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
 {
@@ -11,22 +6,76 @@ namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
     {
         public IEnumerable<DomainEvent> DecideCriar(Guid id, string nome, string desc, decimal preco, string cat)
         {
-            if (string.IsNullOrWhiteSpace(nome)) throw new InvalidOperationException("Nome obrigatório.");
-            if (preco < 0) throw new InvalidOperationException("Preço inválido.");
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                throw new InvalidOperationException("Nome obrigatório.");
+            }
+
+            if (preco < 0)
+            {
+                throw new InvalidOperationException("Preço inválido.");
+            }
+
             yield return new JogoCreated(id, nome, desc, preco, cat);
+        }
+
+        public IEnumerable<DomainEvent> DecideAlterar(Guid id, string nome, string desc, decimal preco, string cat)
+        {
+            if (string.IsNullOrWhiteSpace(id.ToString()) || id == Guid.Empty)
+            {
+                throw new InvalidOperationException("ID inválido.");
+            }
+
+            if (string.IsNullOrWhiteSpace(nome))
+            {
+                throw new InvalidOperationException("Nome obrigatório.");
+            }
+
+            if (preco < 0)
+            {
+                throw new InvalidOperationException("Preço inválido.");
+            }
+
+            if (Retirado)
+            {
+                throw new InvalidOperationException("Jogo retirado.");
+            }
+
+            if ((nome == Nome) && (preco == Preco) && (desc == Descricao) && (cat == Categoria))
+            {
+                yield break;
+            }
+
+            yield return new JogoChanged(Id, Nome, nome, Descricao, desc, Preco, preco, Categoria, cat);
         }
 
         public IEnumerable<DomainEvent> DecideAlterarPreco(decimal novoPreco)
         {
-            if (novoPreco < 0) throw new InvalidOperationException("Preço inválido.");
-            if (Retirado) throw new InvalidOperationException("Jogo retirado.");
-            if (novoPreco == Preco) yield break;
+            if (novoPreco < 0)
+            {
+                throw new InvalidOperationException("Preço inválido.");
+            }
+
+            if (Retirado)
+            {
+                throw new InvalidOperationException("Jogo retirado.");
+            }
+
+            if (novoPreco == Preco)
+            {
+                yield break;
+            }
+
             yield return new JogoPriceChanged(Id, Preco, novoPreco);
         }
 
-        public IEnumerable<DomainEvent> DecideRetirar()
+        public IEnumerable<DomainEvent> DecideDeletar()
         {
-            if (Retirado) yield break;
+            if (Retirado)
+            {
+                yield break;
+            }
+
             yield return new JogoRetired(Id);
         }
     }

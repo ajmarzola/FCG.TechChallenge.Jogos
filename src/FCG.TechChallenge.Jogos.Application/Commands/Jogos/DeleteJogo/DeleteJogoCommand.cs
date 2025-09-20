@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.DeleteJogo
 {
-    public class DeleteJogoCommand
-    {
-    }
+    public sealed record DeleteJogoCommand(Guid JogoId) : IRequest;
 }

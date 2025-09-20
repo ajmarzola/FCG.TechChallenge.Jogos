@@ -1,23 +1,20 @@
 ﻿using FCG.TechChallenge.Jogos.Application.Abstractions;
+using FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo;
 using MediatR;
 using System.Text.Json;
-using FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo
 {
-    public sealed class CreateJogoHandler : IRequestHandler<CreateJogoCommand, Guid>
+    public sealed class CreateJogoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<CreateJogoCommand, Guid>
     {
-        private readonly IEventStore _store;
-        private readonly IOutbox _outbox;
-
-        public CreateJogoHandler(IEventStore store, IOutbox outbox)
-        { _store = store; _outbox = outbox; }
+        private readonly IEventStore _store = store;
+        private readonly IOutbox _outbox = outbox;
 
         public async Task<Guid> Handle(CreateJogoCommand c, CancellationToken ct)
         {
-            var id = Guid.NewGuid();
-            var agg = new Jogo();
-            var evts = agg.DecideCriar(id, c.Nome, c.Descricao, c.Preco, c.Categoria).ToArray();
+            Guid id = Guid.NewGuid();
+            Jogo agg = new Jogo();
+            Domain.Events.DomainEvent[] evts = agg.DecideCriar(id, c.Nome, c.Descricao, c.Preco, c.Categoria).ToArray();
 
             // stream: "jogo-{id}"
             await _store.AppendAsync($"jogo-{id}", expectedVersion: 0, evts, ct);

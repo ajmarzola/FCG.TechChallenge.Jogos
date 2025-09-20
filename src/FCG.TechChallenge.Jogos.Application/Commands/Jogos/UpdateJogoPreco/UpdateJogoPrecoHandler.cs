@@ -4,18 +4,18 @@ using FCG.TechChallenge.Jogos.Domain.Events;
 using MediatR;
 using System.Text.Json;
 
-namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogo
+namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogoPreco
 {
-    public sealed class UpdateJogoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<UpdateJogoCommand>
+    public sealed class UpdateJogoPrecoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<UpdateJogoPrecoCommand>
     {
         private readonly IEventStore _store = store;
         private readonly IOutbox _outbox = outbox;
 
-        public async Task Handle(UpdateJogoCommand request, CancellationToken ct)
+        public async Task Handle(UpdateJogoPrecoCommand request, CancellationToken ct)
         {
             string streamId = $"jogo-{request.JogoId}";
             IReadOnlyList<object> history = await _store.LoadAsync(streamId, ct);
-
+            
             if (history.Count == 0)
             {
                 throw new KeyNotFoundException("Jogo não encontrado.");
@@ -28,8 +28,8 @@ namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogo
                 jogo.Apply(e);
             }
 
-            DomainEvent[] newEvents = jogo.DecideAlterar(request.JogoId, request.Nome, request.Descricao, request.Preco, request.Categoria).ToArray();
-
+            DomainEvent[] newEvents = jogo.DecideAlterarPreco(request.NovoPreco).ToArray();
+            
             if (newEvents.Length == 0)
             {
                 return; // nada a fazer
