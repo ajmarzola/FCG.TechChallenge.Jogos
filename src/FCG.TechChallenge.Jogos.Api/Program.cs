@@ -1,7 +1,26 @@
 using FCG.TechChallenge.Jogos.Api.CompositionRoot;
 using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
+using FCG.TechChallenge.Jogos.Application.Abstractions;
+using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
+using FCG.TechChallenge.Jogos.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Configuration["ConnectionStrings:Postgres"];
+
+builder.Services.AddDbContext<EventStoreDbContext>(opt =>
+{
+    opt.UseNpgsql(cs, npg =>
+    {
+        // Se quiser, configure compatibilidade, retry, etc.
+        npg.MigrationsHistoryTable("__EFMigrationsHistory", "public");
+    });
+});
+
+builder.Services.AddScoped<IEventStore, PgEventStore>();
+builder.Services.AddScoped<IOutbox, PgOutbox>();
+
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddEndpointsApiExplorer();
@@ -20,29 +39,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-string[] summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
 
-app.MapGet("/weatherforecast", () =>
-{
-    WeatherForecast[] forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
 
 app.Run();
 
-public record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

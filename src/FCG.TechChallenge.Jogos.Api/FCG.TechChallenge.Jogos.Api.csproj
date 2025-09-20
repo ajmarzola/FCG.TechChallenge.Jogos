@@ -10,11 +10,13 @@
     <PackageReference Include="FluentValidation" Version="12.0.0" />
     <PackageReference Include="MediatR" Version="13.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.20" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\FCG.TechChallenge.Jogos.Application\FCG.TechChallenge.Jogos.Application.csproj" />
+    <ProjectReference Include="..\FCG.TechChallenge.Jogos.Infrastructure\FCG.TechChallenge.Jogos.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
