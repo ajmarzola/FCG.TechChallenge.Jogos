@@ -4,13 +4,8 @@ using FCG.TechChallenge.Jogos.Domain.Events;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
 {
@@ -22,7 +17,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
         public async Task<int> AppendAsync(string streamId, int expectedVersion, IEnumerable<object> events, CancellationToken ct)
         {
             var evts = events.Cast<DomainEvent>().ToArray();
-            if (evts.Length == 0) return expectedVersion;
+            if (evts.Length == 0)
+            {
+                return expectedVersion;
+            }
 
             await using var conn = new NpgsqlConnection(_cs);
             await conn.OpenAsync(ct);
@@ -38,9 +36,12 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
                         new { StreamId = streamId }, tx, cancellationToken: ct)) ?? 0;
 
                 if (currentVersion != expectedVersion)
+                {
                     throw new DBConcurrencyException($"Expected version {expectedVersion} but was {currentVersion} for stream {streamId}.");
+                }
 
                 var next = expectedVersion;
+
                 foreach (var e in evts)
                 {
                     next++;
@@ -86,17 +87,25 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
                     new { StreamId = streamId }, cancellationToken: ct));
 
             var list = new List<object>();
+
             foreach (var (type, data) in rows)
             {
-                var obj = type switch
+                var jsonOpts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+                object? obj = type switch
                 {
-                    "JogoCreated" => JsonSerializer.Deserialize<JogoCreated>(data)!,
-                    "JogoPriceChanged" => JsonSerializer.Deserialize<JogoPriceChanged>(data)!,
-                    "JogoRetired" => JsonSerializer.Deserialize<JogoRetired>(data)!,
+                    "JogoCreated" => JsonSerializer.Deserialize<JogoCreated>(data, jsonOpts),
+                    "JogoPriceChanged" => JsonSerializer.Deserialize<JogoPriceChanged>(data, jsonOpts),
+                    "JogoRetired" => JsonSerializer.Deserialize<JogoRetired>(data, jsonOpts),
                     _ => null
                 };
-                if (obj != null) list.Add(obj);
+
+                if (obj != null)
+                {
+                    list.Add(obj);
+                }
             }
+
             return list;
         }
     }

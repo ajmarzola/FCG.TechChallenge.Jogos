@@ -2,6 +2,7 @@ using FCG.TechChallenge.Jogos.Api.CompositionRoot;
 using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
 using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
+using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +14,11 @@ builder.Services.AddDbContext<EventStoreDbContext>(opt =>
 {
     opt.UseNpgsql(cs, npg =>
     {
-        // Se quiser, configure compatibilidade, retry, etc.
         npg.MigrationsHistoryTable("__EFMigrationsHistory", "public");
     });
 });
+
+builder.Services.Configure<SqlOptions>(builder.Configuration.GetSection("Postgres"));
 
 builder.Services.AddScoped<IEventStore, PgEventStore>();
 builder.Services.AddScoped<IOutbox, PgOutbox>();

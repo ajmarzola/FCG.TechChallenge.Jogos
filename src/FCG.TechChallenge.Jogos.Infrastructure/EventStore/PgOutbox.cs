@@ -1,12 +1,8 @@
 ﻿using Dapper;
+using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
 {
