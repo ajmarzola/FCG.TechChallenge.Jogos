@@ -2,10 +2,8 @@
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence
 {
-    public sealed class EventStoreDbContext : DbContext
+    public sealed class EventStoreDbContext(DbContextOptions<EventStoreDbContext> opt) : DbContext(opt)
     {
-        public EventStoreDbContext(DbContextOptions<EventStoreDbContext> opt) : base(opt) { }
-
         protected override void OnModelCreating(ModelBuilder b)
         {
             // Schema padrão "public"
