@@ -8,19 +8,12 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence.DesignTime
     {
         public EventStoreDbContext CreateDbContext(string[] args)
         {
-            // Descobre a raiz da solução a partir da pasta atual
-            var basePath = Directory.GetCurrentDirectory();
-
-            // Carrega appsettings (prioriza Development se existir)
-            //var config = new ConfigurationBuilder().SetBasePath(basePath).AddJsonFile("appsettings.json", optional: true).AddJsonFile("appsettings.Development.json", optional: true).AddEnvironmentVariables().Build();
-
-            // Ajuste a chave conforme você configurou (ex.: "Sql:ConnectionString")
-            //var connectionString = config["Postgres"] ?? config.GetConnectionString("Postgres") ?? throw new InvalidOperationException("Connection string não encontrada. Defina 'Postgres' ou 'Postgres'.");
-
-            var connectionString = "Host=localhost;Port=5432;Database=fcg_jogos;Username=postgres;Password=postgres;Pooling=true;Maximum Pool Size=50";
-            var optionsBuilder = new DbContextOptionsBuilder<EventStoreDbContext>() .UseNpgsql(connectionString);
-
-            return new EventStoreDbContext(optionsBuilder.Options);
+            var infraDir = Directory.GetCurrentDirectory();
+            var apiDir = Path.GetFullPath(Path.Combine(infraDir, "..", "FCG.TechChallenge.Jogos.Api"));
+            var config = new ConfigurationBuilder().SetBasePath(apiDir).AddJsonFile("appsettings.Development.json", optional: true).AddJsonFile("appsettings.json", optional: true).AddEnvironmentVariables().Build();
+            var cs = config.GetConnectionString("Postgres") ?? config["ConnectionStrings:Postgres"] ?? Environment.GetEnvironmentVariable("ConnectionStrings__Postgres") ?? throw new InvalidOperationException("Connection string 'Postgres' não encontrada.");
+            var options = new DbContextOptionsBuilder<EventStoreDbContext>().UseNpgsql(cs, npg => { npg.MigrationsHistoryTable("__EFMigrationsHistory", "public"); }).Options;
+            return new EventStoreDbContext(options);
         }
     }
 }
