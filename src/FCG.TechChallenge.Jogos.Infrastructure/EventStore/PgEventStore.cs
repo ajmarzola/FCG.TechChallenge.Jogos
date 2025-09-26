@@ -9,14 +9,14 @@ using System.Text.Json;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
 {
-    public sealed class PgEventStore : IEventStore
+    public sealed class PgEventStore(IOptions<SqlOptions> opt) : IEventStore
     {
-        private readonly string _cs;
-        public PgEventStore(IOptions<SqlOptions> opt) => _cs = opt.Value.ConnectionString;
+        private readonly string _cs = opt.Value.ConnectionString;
 
         public async Task<int> AppendAsync(string streamId, int expectedVersion, IEnumerable<object> events, CancellationToken ct)
         {
             var evts = events.Cast<DomainEvent>().ToArray();
+
             if (evts.Length == 0)
             {
                 return expectedVersion;

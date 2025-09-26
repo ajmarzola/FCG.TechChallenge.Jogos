@@ -1,4 +1,7 @@
-﻿using FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo;
+﻿using FCG.TechChallenge.Jogos.Application.Abstractions;
+using FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo;
+using FCG.TechChallenge.Jogos.Application.Queries.Jogos;
+using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql;
 
 namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
 {
@@ -11,6 +14,12 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
             {
                 // Escolha um tipo âncora do assembly Application
                 cfg.RegisterServicesFromAssemblyContaining<CreateJogoCommand>();
+            });
+
+            services.AddMediatR(cfg =>
+            {
+                // Escolha um tipo âncora do assembly Application
+                cfg.RegisterServicesFromAssemblyContaining<SearchJogosQuery>();
             });
 
             // TODO: FluentValidation, mapeamentos, behaviors, etc.
@@ -28,7 +37,7 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
 
             // TODO: registrar repositórios, UoW, serviços de infra, caches, etc.
             // services.AddScoped<IJogoRepository, JogoRepository>();
-
+            services.AddScoped<IJogosReadRepository, JogosReadRepository>();
             return services;
         }
     }

@@ -4,5 +4,5 @@ using MediatR;
 
 namespace FCG.TechChallenge.Jogos.Application.Queries.Jogos
 {
-    public sealed record SearchJogosQuery(string? Termo, string? Categoria, int Page = 1, int Size = 20) : IRequest<Paged<JogoDto>>;
+    public sealed record SearchJogosQuery(string? Termo, int Page = 1, int PageSize = 20) : IRequest<Paged<JogoDto>>;
 }

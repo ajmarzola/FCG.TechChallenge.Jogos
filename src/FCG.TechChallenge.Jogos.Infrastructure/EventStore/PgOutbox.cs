@@ -6,14 +6,14 @@ using Npgsql;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
 {
-    public sealed class PgOutbox : IOutbox
+    public sealed class PgOutbox(IOptions<SqlOptions> opt) : IOutbox
     {
-        private readonly string _cs;
-        public PgOutbox(IOptions<SqlOptions> opt) => _cs = opt.Value.ConnectionString;
+        private readonly string _cs = opt.Value.ConnectionString;
 
         public async Task EnqueueAsync(string type, string payload, CancellationToken ct)
         {
             await using var conn = new NpgsqlConnection(_cs);
+
             await conn.ExecuteAsync(
                 new CommandDefinition(
                     @"INSERT INTO ""OutboxMessages""
