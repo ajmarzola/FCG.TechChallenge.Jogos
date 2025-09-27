@@ -8,13 +8,9 @@ using Npgsql;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
 {
-    public sealed class JogosReadRepository : IJogosReadRepository
+    public sealed class JogosReadRepository(IOptions<SqlOptions> opt) : IJogosReadRepository
     {
-        private readonly string _cs;
-
-        // SqlOptions é o mesmo que você já injeta para o PgEventStore
-        public JogosReadRepository(IOptions<SqlOptions> opt)
-            => _cs = opt.Value.ConnectionString ?? throw new InvalidOperationException("ConnectionString vazia.");
+        private readonly string _cs = opt.Value.ConnectionString ?? throw new InvalidOperationException("ConnectionString vazia.");
 
         public async Task<Paged<JogoDto>> SearchAsync(string? termo, int page, int pageSize, CancellationToken ct)
         {
@@ -25,7 +21,7 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
             termo = string.IsNullOrWhiteSpace(termo) ? null : termo.Trim();
 
             // Troque "jogos_view" para o nome da sua tabela/VIEW de leitura
-            const string from = "FROM jogo_view";
+            const string from = "FROM public.jogo_view";
 
             var where = @"WHERE (@termo IS NULL OR
                             nome ILIKE '%' || @termo || '%' OR
@@ -51,7 +47,7 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
             var total = await conn.ExecuteScalarAsync<int>(new CommandDefinition(sqlCount, param, cancellationToken: ct));
             var rows = await conn.QueryAsync<JogoDto>(new CommandDefinition(sqlPage, param, cancellationToken: ct));
 
-            return new Paged<JogoDto>(rows.ToList(), page, pageSize, total);
+            return new Paged<JogoDto>([.. rows], page, pageSize, total);
         }
     }
 }

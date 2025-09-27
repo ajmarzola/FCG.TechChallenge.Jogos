@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence.Migrations
+namespace FCG.TechChallenge.Jogos.Infrastructure.Infrastructure.Persistence.EventStore.Migrations
 {
     [DbContext(typeof(EventStoreDbContext))]
-    [Migration("20250924012722_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250927200117_Initial_EventStore")]
+    partial class Initial_EventStore
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

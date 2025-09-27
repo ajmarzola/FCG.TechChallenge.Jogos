@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence.Migrations
+namespace FCG.TechChallenge.Jogos.Infrastructure.Infrastructure.Persistence.EventStore.Migrations
 {
     [DbContext(typeof(EventStoreDbContext))]
     partial class EventStoreDbContextModelSnapshot : ModelSnapshot

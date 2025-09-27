@@ -6,10 +6,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="EventStore\Migrations\" />
+    <Folder Include="Persistence\Migrations\" />
+    <Folder Include="Persistence\ReadModel\Migrations\" />
     <Folder Include="Serialization\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Dapper" />
+    <PackageReference Include="EFCore.NamingConventions" />
     <PackageReference Include="Elastic.Clients.Elasticsearch" />
     <PackageReference Include="Microsoft.Data.SqlClient" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">

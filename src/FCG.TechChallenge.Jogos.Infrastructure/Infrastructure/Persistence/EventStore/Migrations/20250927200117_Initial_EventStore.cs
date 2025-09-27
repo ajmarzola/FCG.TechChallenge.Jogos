@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence.Migrations
+namespace FCG.TechChallenge.Jogos.Infrastructure.Infrastructure.Persistence.EventStore.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class Initial_EventStore : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

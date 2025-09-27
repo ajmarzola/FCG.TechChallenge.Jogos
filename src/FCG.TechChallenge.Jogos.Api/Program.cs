@@ -4,7 +4,7 @@ using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence;
-using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql;
+using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -15,10 +15,8 @@ if (string.IsNullOrWhiteSpace(cs))
     throw new InvalidOperationException("ConnectionStrings:Postgres está vazio/ausente.");
 }
 
-builder.Services.AddDbContext<EventStoreDbContext>(opt =>
-{
-    opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public"));
-});
+builder.Services.AddDbContext<EventStoreDbContext>(opt => { opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public")).UseSnakeCaseNamingConvention(); });
+builder.Services.AddDbContext<ReadModelDbContext>(opt => opt.UseNpgsql(cs, x => x.MigrationsHistoryTable("__EFMigrationsHistory_Read", "public")).UseSnakeCaseNamingConvention());
 
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
 builder.Services.AddScoped<IEventStore, PgEventStore>();
