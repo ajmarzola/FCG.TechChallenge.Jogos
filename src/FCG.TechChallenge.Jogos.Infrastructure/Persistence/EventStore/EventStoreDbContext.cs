@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence
+namespace FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore
 {
     public sealed class EventStoreDbContext(DbContextOptions<EventStoreDbContext> opt) : DbContext(opt)
     {

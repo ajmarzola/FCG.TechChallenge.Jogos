@@ -3,7 +3,7 @@ using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
 using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
-using FCG.TechChallenge.Jogos.Infrastructure.Persistence;
+using FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using Microsoft.EntityFrameworkCore;
 

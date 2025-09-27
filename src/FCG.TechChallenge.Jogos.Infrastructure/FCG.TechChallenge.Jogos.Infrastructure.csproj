@@ -6,7 +6,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="EventStore\Migrations\" />
-    <Folder Include="Persistence\Migrations\" />
     <Folder Include="Persistence\ReadModel\Migrations\" />
     <Folder Include="Serialization\" />
   </ItemGroup>
