@@ -3,8 +3,10 @@ using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
 using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
+using FCG.TechChallenge.Jogos.Infrastructure.Outbox;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
+using Microsoft.Azure.WebJobs.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -19,6 +21,11 @@ builder.Services.AddDbContext<EventStoreDbContext>(opt => { opt.UseNpgsql(cs, np
 builder.Services.AddDbContext<ReadModelDbContext>(opt => opt.UseNpgsql(cs, x => x.MigrationsHistoryTable("__EFMigrationsHistory_Read", "public")).UseSnakeCaseNamingConvention());
 
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
+builder.Services.Configure<ServiceBusOptions>(builder.Configuration.GetSection("ServiceBus"));
+builder.Services.Configure<ElasticOptions>(builder.Configuration.GetSection("Elastic"));
+
+builder.Services.AddHostedService<OutboxDispatcher>();
+
 builder.Services.AddScoped<IEventStore, PgEventStore>();
 builder.Services.AddScoped<IOutbox, PgOutbox>();
 

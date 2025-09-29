@@ -44,10 +44,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
 
             var param = new { termo, take, skip };
 
-            var total = await conn.ExecuteScalarAsync<int>(new CommandDefinition(sqlCount, param, cancellationToken: ct));
-            var rows = await conn.QueryAsync<JogoDto>(new CommandDefinition(sqlPage, param, cancellationToken: ct));
+            var total = await conn.ExecuteScalarAsync<int>(sqlCount, new { termo });
+            var items = (await conn.QueryAsync<JogoDto>(sqlPage, new { termo, take, skip })).ToList();
 
-            return new Paged<JogoDto>([.. rows], page, pageSize, total);
+            return new Paged<JogoDto>(items, total, page, pageSize);
         }
     }
 }
