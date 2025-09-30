@@ -3,10 +3,10 @@ using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
 using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
+using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
 using FCG.TechChallenge.Jogos.Infrastructure.Outbox;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
-using Microsoft.Azure.WebJobs.ServiceBus;
 using Microsoft.EntityFrameworkCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -14,7 +14,7 @@ var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Config
 
 if (string.IsNullOrWhiteSpace(cs))
 {
-    throw new InvalidOperationException("ConnectionStrings:Postgres está vazio/ausente.");
+    throw new InvalidOperationException("ConnectionStrings:Postgres estï¿½ vazio/ausente.");
 }
 
 builder.Services.AddDbContext<EventStoreDbContext>(opt => { opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public")).UseSnakeCaseNamingConvention(); });
@@ -45,5 +45,5 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 //app.UseMetricServer();   // Endpoint - metrics
-//app.UseHttpMetrics();    // Coleta automática de métricas HTTP
+//app.UseHttpMetrics();    // Coleta automï¿½tica de mï¿½tricas HTTP
 app.Run();

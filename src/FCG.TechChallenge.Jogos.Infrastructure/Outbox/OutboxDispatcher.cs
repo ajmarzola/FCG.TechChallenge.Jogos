@@ -7,19 +7,22 @@ using Microsoft.Extensions.Options;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
 {
-    public sealed class OutboxDispatcher(IOptions<ServiceBusOptions> sbOpt, IOutbox outbox, ILogger<OutboxDispatcher> log) : BackgroundService
+    public sealed class OutboxDispatcher(
+    IOptions<ServiceBusOptions> sbOpt,
+    OutboxRepository repo,
+    ILogger<OutboxDispatcher> log) : BackgroundService
     {
-        private readonly string _conn = sbOpt.Value.ConnectionString!;
-        private readonly string _queue = sbOpt.Value.QueueName ?? "jogos-outbox";
-
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await using var client = new ServiceBusClient(_conn);
-            ServiceBusSender sender = client.CreateSender(_queue);
+            var connStr = sbOpt.Value.ConnectionString ?? throw new InvalidOperationException("ServiceBus ConnectionString vazio");
+            var queue = sbOpt.Value.QueueName ?? "jogos-outbox";
+
+            await using var client = new ServiceBusClient(connStr);
+            var sender = client.CreateSender(queue);
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                var batch = await outbox.PeekPendingAsync(100, stoppingToken);
+                var batch = await repo.PeekPendingAsync(100, stoppingToken);
                 if (batch.Count == 0)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
@@ -38,12 +41,12 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
                     try
                     {
                         await sender.SendMessageAsync(msg, stoppingToken);
-                        await outbox.MarkProcessedAsync(item.Id, stoppingToken);
+                        await repo.MarkProcessedAsync(item.Id, stoppingToken);
                     }
                     catch (Exception ex)
                     {
                         log.LogError(ex, "Falha publicando OutboxItem {Id}", item.Id);
-                        await outbox.MarkFailedAsync(item.Id, ex.Message, stoppingToken);
+                        await repo.MarkFailedAsync(item.Id, ex.Message, stoppingToken);
                     }
                 }
             }

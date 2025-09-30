@@ -1,6 +1,8 @@
 ﻿using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo;
 using FCG.TechChallenge.Jogos.Application.Queries.Jogos;
+using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
+using FCG.TechChallenge.Jogos.Infrastructure.Outbox;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql;
 
 namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
@@ -31,13 +33,13 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
 
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            // Exemplo com EF Core (ajuste para o que você usa)
-            // var connectionString = configuration.GetConnectionString("Default")!;
-            // services.AddDbContext<AppDbContext>(opt => opt.UseSqlServer(connectionString));
+            var cs = configuration.GetConnectionString("Postgres") ?? configuration["Postgres"];
 
-            // TODO: registrar repositórios, UoW, serviços de infra, caches, etc.
-            // services.AddScoped<IJogoRepository, JogoRepository>();
             services.AddScoped<IJogosReadRepository, JogosReadRepository>();
+            services.AddSingleton<Domain.Abstractions.IOutbox>(sp => new OutboxStore(cs));
+            services.AddSingleton(new OutboxRepository(cs));
+            services.Configure<ServiceBusOptions>(configuration.GetSection("ServiceBus"));
+            services.AddHostedService<OutboxDispatcher>();
             return services;
         }
     }

@@ -20,4 +20,8 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" OutputItemType="Analyzer" PrivateAssets="all" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\FCG.TechChallenge.Jogos.Contracts\FCG.TechChallenge.Jogos.Contracts.csproj" />
+    <ProjectReference Include="..\FCG.TechChallenge.Jogos.Infrastructure\FCG.TechChallenge.Jogos.Infrastructure.csproj" />
+  </ItemGroup>
 </Project>

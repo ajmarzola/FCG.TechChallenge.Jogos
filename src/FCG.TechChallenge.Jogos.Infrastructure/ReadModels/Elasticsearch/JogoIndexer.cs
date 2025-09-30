@@ -1,4 +1,6 @@
-﻿namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
+﻿using Nest;
+
+namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 {
     public sealed class JogoIndexer(ElasticClientFactory factory)
     {

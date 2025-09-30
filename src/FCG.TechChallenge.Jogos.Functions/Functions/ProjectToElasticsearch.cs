@@ -1,4 +1,7 @@
 using Azure.Messaging.ServiceBus;
+using FCG.TechChallenge.Jogos.Contracts.Events;
+using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
+using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
