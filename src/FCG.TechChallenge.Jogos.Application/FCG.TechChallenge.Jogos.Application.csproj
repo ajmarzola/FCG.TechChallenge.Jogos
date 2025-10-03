@@ -8,9 +8,9 @@
     <Folder Include="Commands\Purchases\RequestPurchase\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FluentValidation" />
-    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
-    <PackageReference Include="MediatR" />
+    <PackageReference Include="FluentValidation" Version="11.9.0" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.0" />
+    <PackageReference Include="MediatR" Version="12.2.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\FCG.TechChallenge.Jogos.Domain\FCG.TechChallenge.Jogos.Domain.csproj" />
