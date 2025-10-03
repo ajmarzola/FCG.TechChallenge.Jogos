@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- Microsoft.Extensions.* (.NET 8) -->
-    <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.17.6" />
+    <PackageVersion Include="Azure.Messaging.ServiceBus" Version="7.18.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.FileExtensions" Version="8.0.0" />

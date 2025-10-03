@@ -8,12 +8,19 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
     {
         public IElasticClient Create()
         {
-            var settings = new ConnectionSettings(new Uri(opt.Value.Uri))
-                .DefaultIndex(opt.Value.Index ?? "jogos")
-                .EnableApiVersioningHeader();
+            var uriString = opt.Value.Uri;
+
+            if (!Uri.TryCreate(uriString, UriKind.Absolute, out var uri))
+            {
+                throw new InvalidOperationException("Elastic:Uri ausente ou inválida. Defina 'Elastic:Uri' nas configs/variáveis de ambiente.");
+            }
+
+            var settings = new ConnectionSettings(uri).DefaultIndex(opt.Value.Index ?? "jogos").EnableApiVersioningHeader();
 
             if (!string.IsNullOrWhiteSpace(opt.Value.Username))
+            {
                 settings = settings.BasicAuthentication(opt.Value.Username, opt.Value.Password);
+            }
 
             return new ElasticClient(settings);
         }

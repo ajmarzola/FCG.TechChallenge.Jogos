@@ -6,12 +6,12 @@ using System.Text.Json;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.DeleteJogo
 {
-    public sealed class DeleteJogoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<DeleteJogoCommand>
+    public sealed class DeleteJogoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<DeleteJogoCommand, Unit>
     {
         private readonly IEventStore _store = store;
         private readonly IOutbox _outbox = outbox;
 
-        public async Task Handle(DeleteJogoCommand request, CancellationToken ct)
+        public async Task<Unit> Handle(DeleteJogoCommand request, CancellationToken ct)
         {
             string streamId = $"jogo-{request.JogoId}";
             IReadOnlyList<object> history = await _store.LoadAsync(streamId, ct);
@@ -32,7 +32,7 @@ namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.DeleteJogo
             
             if (newEvents.Length == 0)
             {
-                return; // já retirado
+                return Unit.Value; // já retirado
             }
 
             int expectedVersion = history.Count;
@@ -42,6 +42,8 @@ namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.DeleteJogo
             {
                 await _outbox.EnqueueAsync(ev.Type, JsonSerializer.Serialize(ev), ct);
             }
+
+            return Unit.Value;
         }
     }
 }

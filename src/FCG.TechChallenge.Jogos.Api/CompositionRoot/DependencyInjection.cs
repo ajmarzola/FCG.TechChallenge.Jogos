@@ -33,11 +33,11 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
 
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            var cs = configuration.GetConnectionString("Postgres") ?? configuration["Postgres"];
-
+            var write = configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("ConnectionStrings:Postgres não configurada.");
+            var read  = configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("ConnectionStrings:Postgres não configurada.");
             services.AddScoped<IJogosReadRepository, JogosReadRepository>();
-            services.AddSingleton<Domain.Abstractions.IOutbox>(sp => new OutboxStore(cs));
-            services.AddSingleton(new OutboxRepository(cs));
+            services.AddSingleton<Domain.Abstractions.IOutbox>(sp => new OutboxStore(write));
+            services.AddSingleton(new OutboxRepository(read));
             services.Configure<ServiceBusOptions>(configuration.GetSection("ServiceBus"));
             services.AddHostedService<OutboxDispatcher>();
             return services;

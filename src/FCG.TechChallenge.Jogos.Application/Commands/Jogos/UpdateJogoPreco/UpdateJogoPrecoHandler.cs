@@ -6,12 +6,12 @@ using System.Text.Json;
 
 namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogoPreco
 {
-    public sealed class UpdateJogoPrecoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<UpdateJogoPrecoCommand>
+    public sealed class UpdateJogoPrecoHandler(IEventStore store, IOutbox outbox) : IRequestHandler<UpdateJogoPrecoCommand, Unit>
     {
         private readonly IEventStore _store = store;
         private readonly IOutbox _outbox = outbox;
 
-        public async Task Handle(UpdateJogoPrecoCommand request, CancellationToken ct)
+        public async Task<Unit> Handle(UpdateJogoPrecoCommand request, CancellationToken ct)
         {
             string streamId = $"jogo-{request.JogoId}";
             IReadOnlyList<object> history = await _store.LoadAsync(streamId, ct);
@@ -32,7 +32,7 @@ namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogoPreco
             
             if (newEvents.Length == 0)
             {
-                return; // nada a fazer
+                return Unit.Value; // nada a fazer
             }
 
             // expectedVersion = versão atual (nº de eventos)
@@ -44,6 +44,8 @@ namespace FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogoPreco
             {
                 await _outbox.EnqueueAsync(ev.Type, JsonSerializer.Serialize(ev), ct);
             }
+
+            return Unit.Value;
         }
     }
 }
