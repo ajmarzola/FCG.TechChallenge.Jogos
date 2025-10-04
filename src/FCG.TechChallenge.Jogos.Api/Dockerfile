@@ -14,12 +14,14 @@ RUN dotnet restore "src/FCG.TechChallenge.Jogos.Api/FCG.TechChallenge.Jogos.Api.
 
 # Agora copia o código todo e compila
 COPY ./src ./src
-WORKDIR /src/FCG.TechChallenge.Jogos.Api
+# ATENÇÃO: após o COPY acima, o caminho correto é /src/src/...
+WORKDIR /src/src/FCG.TechChallenge.Jogos.Api
 RUN dotnet build "FCG.TechChallenge.Jogos.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build --no-restore
 
 # ===== Etapa de publish =====
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
+# O WORKDIR permanece /src/src/FCG.TechChallenge.Jogos.Api aqui
 RUN dotnet publish "FCG.TechChallenge.Jogos.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --no-build
 
 # ===== Etapa final (runtime) =====
@@ -30,7 +32,6 @@ WORKDIR /app
 ENV ASPNETCORE_URLS=http://+:8080
 
 COPY --from=publish /app/publish .
-# Se quiser manter a 8081 para debug local, pode expor as duas:
 EXPOSE 8080
 EXPOSE 8081
 
