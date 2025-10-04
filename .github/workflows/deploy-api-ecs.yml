@@ -94,14 +94,13 @@ jobs:
           aws ecs update-service --cluster "${CLUSTER_NAME}" --service "${SERVICE_NAME}" --task-definition "${NEW_TD_ARN}" --desired-count 1 --force-new-deployment
           aws ecs wait services-stable --cluster "${CLUSTER_NAME}" --services "${SERVICE_NAME}"
 
-      # ====== Passos de debug úteis (opcional) ======
+      # ====== Passos de debug úteis (executam só se der falha) ======
       - name: Show last ECS events (debug)
         if: failure()
         run: |
           aws ecs describe-services \
             --cluster "${CLUSTER_NAME}" \
             --services "${SERVICE_NAME}" \
-            --include EVENTS \
             --query 'services[0].events[0:15]'
 
       - name: Show STOPPED task reasons (debug)
