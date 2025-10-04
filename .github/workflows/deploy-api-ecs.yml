@@ -68,7 +68,7 @@ jobs:
           echo "NEW_TD_ARN=${NEW_TD_ARN}" >> $GITHUB_ENV
           echo "Registered: ${NEW_TD_ARN}"
 
-      # (Opcional) Criar o Service se ainda não existir – sem ALB, IP público
+      # Cria o Service se não existir (Fargate, IP público)
       - name: Create service if not exists
         run: |
           set -e
@@ -76,7 +76,6 @@ jobs:
           if [ "${EXISTS}" = "ACTIVE" ]; then
             echo "Service already exists."
           else
-            # pegue automaticamente subnets e um SG padrão; ajuste se quiser algo específico
             VPC_ID=$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text)
             SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=${VPC_ID} Name=defaultForAz,Values=true --query 'Subnets[].SubnetId' --output text | tr '\t' ',')
             SG=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=${VPC_ID} Name=group-name,Values=default --query 'SecurityGroups[0].GroupId' --output text)
@@ -92,5 +91,26 @@ jobs:
 
       - name: Update service to new task definition
         run: |
-          aws ecs update-service --cluster "${CLUSTER_NAME}" --service "${SERVICE_NAME}" --task-definition "${NEW_TD_ARN}"
+          aws ecs update-service --cluster "${CLUSTER_NAME}" --service "${SERVICE_NAME}" --task-definition "${NEW_TD_ARN}" --desired-count 1 --force-new-deployment
           aws ecs wait services-stable --cluster "${CLUSTER_NAME}" --services "${SERVICE_NAME}"
+
+      # ====== Passos de debug úteis (opcional) ======
+      - name: Show last ECS events (debug)
+        if: failure()
+        run: |
+          aws ecs describe-services \
+            --cluster "${CLUSTER_NAME}" \
+            --services "${SERVICE_NAME}" \
+            --include EVENTS \
+            --query 'services[0].events[0:15]'
+
+      - name: Show STOPPED task reasons (debug)
+        if: failure()
+        run: |
+          TASKS=$(aws ecs list-tasks --cluster "${CLUSTER_NAME}" --service-name "${SERVICE_NAME}" --desired-status STOPPED --query 'taskArns' --output text)
+          if [ -n "$TASKS" ]; then
+            aws ecs describe-tasks --cluster "${CLUSTER_NAME}" --tasks $TASKS \
+              --query 'tasks[].{stoppedReason:stoppedReason,containers:containers[].reason}'
+          else
+            echo "No STOPPED tasks"
+          fi
