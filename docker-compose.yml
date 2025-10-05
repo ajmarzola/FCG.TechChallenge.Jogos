@@ -1,12 +1,20 @@
+version: "3.8"
+
 services:
-  sql:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: jogos-sql
+  postgres:
+    image: postgres:16-alpine
+    container_name: jogos-postgres
     environment:
-      ACCEPT_EULA: "Y"
-      SA_PASSWORD: "Pass@word1" # dev only
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jogos
     ports:
-      - "1433:1433"
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: unless-stopped
 
   elasticsearch:
@@ -36,8 +44,8 @@ services:
       dockerfile: src/FCG.TechChallenge.Jogos.Api/Dockerfile
     container_name: jogos-api
     environment:
-      # Banco de dados (ajuste o nome se usar outro provedor)
-      ConnectionStrings__Postgres: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
+      # Banco de dados PostgreSQL
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=jogos;Username=postgres;Password=postgres"
 
       # ElasticSearch (para logs / observabilidade)
       Elastic__Uri: "http://elasticsearch:9200"
@@ -51,7 +59,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - sql
+      - postgres
       - elasticsearch
     restart: unless-stopped
 
@@ -61,15 +69,15 @@ services:
       dockerfile: src/FCG.TechChallenge.Jogos.Functions/Dockerfile
     container_name: jogos-functions
     environment:
-      # Variáveis sensíveis (lidas do .env ou secrets)
+      # Variáveis sensíveis (lidas do .env)
       ServiceBusConn: ${ServiceBusConn}
       AzureWebJobsStorage: ${AzureWebJobsStorage}
       FUNCTIONS_WORKER_RUNTIME: ${FUNCTIONS_WORKER_RUNTIME:-dotnet-isolated}
 
       # Outras configs
       Elastic__Uri: "http://elasticsearch:9200"
-      ConnectionStrings__Postgres: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=jogos;Username=postgres;Password=postgres"
     depends_on:
-      - sql
+      - postgres
       - elasticsearch
     restart: unless-stopped
