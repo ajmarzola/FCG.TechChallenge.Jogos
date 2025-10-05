@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -38,13 +36,18 @@ services:
       dockerfile: src/FCG.TechChallenge.Jogos.Api/Dockerfile
     container_name: jogos-api
     environment:
-      # NOME ALINHADO COM O CÓDIGO (Program.cs): "Postgres"
+      # Banco de dados (ajuste o nome se usar outro provedor)
       ConnectionStrings__Postgres: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
-      # ElasticSearch para logging/observabilidade:
+
+      # ElasticSearch (para logs / observabilidade)
       Elastic__Uri: "http://elasticsearch:9200"
-      # Se sua API expõe na 8080 dentro do container (como no Dockerfile), mantenha:
+
+      # ASP.NET Core
       ASPNETCORE_URLS: "http://0.0.0.0:8080"
+
+      # Azure Service Bus (Options Pattern → ServiceBusOptions)
       ServiceBus__ConnectionString: ${ServiceBusConn}
+      ServiceBus__QueueName: "jogos-outbox"
     ports:
       - "8080:8080"
     depends_on:
@@ -57,21 +60,16 @@ services:
       context: .
       dockerfile: src/FCG.TechChallenge.Jogos.Functions/Dockerfile
     container_name: jogos-functions
-    # Variáveis sensíveis/segredos vindos do ambiente (.env ou pipeline):
     environment:
-      # *** Nomes DEVEM bater com o que o seu código usa ***
-      # Se seu atributo [ServiceBusTrigger(Connection = "ServiceBusConn")] usa "ServiceBusConn",
-      # mantenha exatamente esse nome aqui.
+      # Variáveis sensíveis (lidas do .env ou secrets)
       ServiceBusConn: ${ServiceBusConn}
       AzureWebJobsStorage: ${AzureWebJobsStorage}
-      # Escolha automática: default "dotnet-isolated" se não vier do ambiente
       FUNCTIONS_WORKER_RUNTIME: ${FUNCTIONS_WORKER_RUNTIME:-dotnet-isolated}
 
-      # Outras configs não sensíveis:
+      # Outras configs
       Elastic__Uri: "http://elasticsearch:9200"
       ConnectionStrings__Postgres: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
     depends_on:
       - sql
       - elasticsearch
-    # Normalmente Functions com gatilhos (Service Bus) não precisam de porta exposta.
     restart: unless-stopped
