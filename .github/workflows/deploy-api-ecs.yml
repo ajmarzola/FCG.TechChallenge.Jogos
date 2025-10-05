@@ -1,0 +1,115 @@
+name: deploy-api-ecs
+
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - "src/FCG.TechChallenge.Jogos.Api/**"
+      - ".github/ecs/taskdef.json"
+      - ".github/workflows/deploy-api-ecs.yml"
+
+env:
+  AWS_REGION: sa-east-1
+  AWS_ACCOUNT_ID: "932732506622"
+  ECR_REPOSITORY: "jogos-api"
+  IMAGE_TAG: "${{ github.sha }}"
+  CLUSTER_NAME: "jogos-cluster-2"
+  SERVICE_NAME: "jogos-api-svc"
+  CONTAINER_NAME: "jogos-api"
+  LOG_GROUP: "/ecs/jogos-api"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Ensure CloudWatch Log Group exists
+        run: |
+          aws logs create-log-group --log-group-name "${LOG_GROUP}" --region "${AWS_REGION}" 2>/dev/null || true
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        run: |
+          IMAGE_URI="${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          docker build -f src/FCG.TechChallenge.Jogos.Api/Dockerfile -t "${IMAGE_URI}" .
+          docker tag "${IMAGE_URI}" "${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:latest"
+          docker push "${IMAGE_URI}"
+          docker push "${{ steps.ecr.outputs.registry }}/${ECR_REPOSITORY}:latest"
+          echo "IMAGE_URI=${IMAGE_URI}" >> $GITHUB_ENV
+
+      - name: Render task definition
+        id: render
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: .github/ecs/taskdef.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ env.IMAGE_URI }}
+
+      - name: Register task definition
+        id: register
+        run: |
+          NEW_TD_ARN=$(aws ecs register-task-definition --cli-input-json file://${{ steps.render.outputs.task-definition }} --query 'taskDefinition.taskDefinitionArn' --output text)
+          echo "NEW_TD_ARN=${NEW_TD_ARN}" >> $GITHUB_ENV
+          echo "Registered: ${NEW_TD_ARN}"
+
+      # Cria o Service se não existir (Fargate, IP público)
+      - name: Create service if not exists
+        run: |
+          set -e
+          EXISTS=$(aws ecs describe-services --cluster "${CLUSTER_NAME}" --services "${SERVICE_NAME}" --query 'services[0].status' --output text 2>/dev/null || true)
+          if [ "${EXISTS}" = "ACTIVE" ]; then
+            echo "Service already exists."
+          else
+            VPC_ID=$(aws ec2 describe-vpcs --filters Name=isDefault,Values=true --query 'Vpcs[0].VpcId' --output text)
+            SUBNETS=$(aws ec2 describe-subnets --filters Name=vpc-id,Values=${VPC_ID} Name=defaultForAz,Values=true --query 'Subnets[].SubnetId' --output text | tr '\t' ',')
+            SG=$(aws ec2 describe-security-groups --filters Name=vpc-id,Values=${VPC_ID} Name=group-name,Values=default --query 'SecurityGroups[0].GroupId' --output text)
+            aws ecs create-service \
+              --cluster "${CLUSTER_NAME}" \
+              --service-name "${SERVICE_NAME}" \
+              --task-definition "${NEW_TD_ARN}" \
+              --launch-type FARGATE \
+              --desired-count 1 \
+              --network-configuration "awsvpcConfiguration={subnets=[${SUBNETS}],securityGroups=[${SG}],assignPublicIp=ENABLED}"
+            echo "Service created."
+          fi
+
+      - name: Update service to new task definition
+        run: |
+          aws ecs update-service --cluster "${CLUSTER_NAME}" --service "${SERVICE_NAME}" --task-definition "${NEW_TD_ARN}" --desired-count 1 --force-new-deployment
+          aws ecs wait services-stable --cluster "${CLUSTER_NAME}" --services "${SERVICE_NAME}"
+
+      # ====== Passos de debug úteis (executam só se der falha) ======
+      - name: Show last ECS events (debug)
+        if: failure()
+        run: |
+          aws ecs describe-services \
+            --cluster "${CLUSTER_NAME}" \
+            --services "${SERVICE_NAME}" \
+            --query 'services[0].events[0:15]'
+
+      - name: Show STOPPED task reasons (debug)
+        if: failure()
+        run: |
+          TASKS=$(aws ecs list-tasks --cluster "${CLUSTER_NAME}" --service-name "${SERVICE_NAME}" --desired-status STOPPED --query 'taskArns' --output text)
+          if [ -n "$TASKS" ]; then
+            aws ecs describe-tasks --cluster "${CLUSTER_NAME}" --tasks $TASKS \
+              --query 'tasks[].{stoppedReason:stoppedReason,containers:containers[].reason}'
+          else
+            echo "No STOPPED tasks"
+          fi
