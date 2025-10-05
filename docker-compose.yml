@@ -1,41 +1,76 @@
+version: "3.8"
+
 services:
   sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: jogos-sql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "Pass@word1"
-    ports: ["1433:1433"]
+      SA_PASSWORD: "Pass@word1" # dev only
+    ports:
+      - "1433:1433"
+    restart: unless-stopped
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.14.3
+    container_name: jogos-elastic
     environment:
       - discovery.type=single-node
       - xpack.security.enabled=false
-    ports: ["9200:9200"]
+    ports:
+      - "9200:9200"
+    restart: unless-stopped
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.14.3
+    container_name: jogos-kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-    ports: ["5601:5601"]
-    depends_on: [elasticsearch]
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    restart: unless-stopped
 
   api:
     build:
       context: .
       dockerfile: src/FCG.TechChallenge.Jogos.Api/Dockerfile
+    container_name: jogos-api
     environment:
-      ConnectionStrings__Sql: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
+      # NOME ALINHADO COM O CÓDIGO (Program.cs): "Postgres"
+      ConnectionStrings__Postgres: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
+      # ElasticSearch para logging/observabilidade:
       Elastic__Uri: "http://elasticsearch:9200"
-    ports: ["8080:8080"]
-    depends_on: [sql, elasticsearch]
+      # Se sua API expõe na 8080 dentro do container (como no Dockerfile), mantenha:
+      ASPNETCORE_URLS: "http://0.0.0.0:8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - sql
+      - elasticsearch
+    restart: unless-stopped
 
   functions:
     build:
       context: .
       dockerfile: src/FCG.TechChallenge.Jogos.Functions/Dockerfile
+    container_name: jogos-functions
+    # Variáveis sensíveis/segredos vindos do ambiente (.env ou pipeline):
     environment:
-      ServiceBusConn: "Endpoint=sb://...;SharedAccessKeyName=...;SharedAccessKey=..."
+      # *** Nomes DEVEM bater com o que o seu código usa ***
+      # Se seu atributo [ServiceBusTrigger(Connection = "ServiceBusConn")] usa "ServiceBusConn",
+      # mantenha exatamente esse nome aqui.
+      ServiceBusConn: ${ServiceBusConn}
+      AzureWebJobsStorage: ${AzureWebJobsStorage}
+      # Escolha automática: default "dotnet-isolated" se não vier do ambiente
+      FUNCTIONS_WORKER_RUNTIME: ${FUNCTIONS_WORKER_RUNTIME:-dotnet-isolated}
+
+      # Outras configs não sensíveis:
       Elastic__Uri: "http://elasticsearch:9200"
-      ConnectionStrings__Sql: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
-    depends_on: [sql, elasticsearch]
+      ConnectionStrings__Postgres: "Server=sql;Database=jogos;User Id=sa;Password=Pass@word1;TrustServerCertificate=True"
+    depends_on:
+      - sql
+      - elasticsearch
+    # Normalmente Functions com gatilhos (Service Bus) não precisam de porta exposta.
+    restart: unless-stopped
