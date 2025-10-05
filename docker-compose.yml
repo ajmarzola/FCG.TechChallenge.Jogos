@@ -44,6 +44,7 @@ services:
       Elastic__Uri: "http://elasticsearch:9200"
       # Se sua API expõe na 8080 dentro do container (como no Dockerfile), mantenha:
       ASPNETCORE_URLS: "http://0.0.0.0:8080"
+      ServiceBus__ConnectionString: ${ServiceBusConn}
     ports:
       - "8080:8080"
     depends_on:
