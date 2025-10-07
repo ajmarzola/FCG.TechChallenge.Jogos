@@ -11,12 +11,7 @@ namespace FCG.TechChallenge.Jogos.Domain.Aggregates.Jogo
                 throw new InvalidOperationException("Nome obrigatório.");
             }
 
-            if (preco < 0)
-            {
-                throw new InvalidOperationException("Preço inválido.");
-            }
-
-            yield return new JogoCreated(id, nome, desc, preco, cat);
+            yield return preco < 0 ? throw new InvalidOperationException("Preço inválido.") : (DomainEvent)new JogoCreated(id, nome, desc, preco, cat);
         }
 
         public IEnumerable<DomainEvent> DecideAlterar(Guid id, string nome, string desc, decimal preco, string cat)

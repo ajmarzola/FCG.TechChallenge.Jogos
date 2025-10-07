@@ -9,56 +9,56 @@ using System.Text.Json;
 namespace FCG.TechChallenge.Jogos.Functions.Functions
 {
     public class ProjectToElasticsearch(
-    ReadModelDbContext db,
-    JogoIndexer indexer,
-    ILogger<ProjectToElasticsearch> logger)
+        ReadModelDbContext db,
+        JogoIndexer indexer,
+        ILogger<ProjectToElasticsearch> logger)
     {
+        private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
+
         [Function(nameof(ProjectToElasticsearch))]
-        public async Task Run(
-            [ServiceBusTrigger("%ServiceBus:QueueName%", Connection = "ServiceBus:ConnectionString")]
-        ServiceBusReceivedMessage message,
-            ServiceBusMessageActions actions,
-            CancellationToken ct)
+        public async Task Run([ServiceBusTrigger(topicName: "jogos", subscriptionName: "project-elastic", Connection = "ServiceBus__ConnectionString")]
+            ServiceBusReceivedMessage message, ServiceBusMessageActions actions, CancellationToken ct)
         {
             try
             {
-                var type = message.Subject; // "JogoCriado" etc
-                var json = message.Body.ToString();
+                var type = message.ApplicationProperties.TryGetValue("type", out var t) ? t?.ToString() : null;
+                logger.LogInformation("Processing message {MessageId} type={Type}", message.MessageId, type);
+
                 switch (type)
                 {
                     case "JogoCriado":
-                        var created = JsonSerializer.Deserialize<JogoCriadoEnvelope>(json)!;
-                        await UpsertJogoRead(db, created, ct);
-                        await indexer.IndexAsync(created.JogoId, created.Nome, created.Descricao, created.Preco, created.Categoria, ct);
-                        break;
-
-                    case "JogoPriceChanged":
-                        var price = JsonSerializer.Deserialize<JogoPrecoAlteradoEnvelope>(json)!;
-                        await UpdatePreco(db, price, ct);
-                        await indexer.PartialUpdatePrecoAsync(price.JogoId, price.NovoPreco, ct);
-                        break;
-
-                    // outros tipos...
-
+                        {
+                            var e = JsonSerializer.Deserialize<JogoCriadoEnvelope>(message.Body, _json)!;
+                            await CreateEntity(db, e, ct);
+                            await indexer.IndexAsync(e.JogoId, e.Nome, e.Descricao, e.Preco, e.Categoria, ct);
+                            break;
+                        }
+                    case "JogoPrecoAlterado":
+                        {
+                            var e = JsonSerializer.Deserialize<JogoPrecoAlteradoEnvelope>(message.Body, _json)!;
+                            await UpdatePreco(db, e, ct);
+                            await indexer.PartialUpdatePrecoAsync(e.JogoId, e.NovoPreco, ct);
+                            break;
+                        }
                     default:
-                        logger.LogWarning("Tipo de evento desconhecido: {Type}", type);
+                        logger.LogWarning("Unhandled event type: {Type}", type);
                         break;
                 }
 
-                await actions.CompleteMessageAsync(message);
+                await actions.CompleteMessageAsync(message, ct);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Erro projetando mensagem {Id}", message.MessageId);
-                await actions.AbandonMessageAsync(message);
+                logger.LogError(ex, "Failed processing message {MessageId}", message.MessageId);
+                await actions.AbandonMessageAsync(message, cancellationToken: ct);
             }
         }
 
-        private static async Task UpsertJogoRead(ReadModelDbContext db, JogoCriadoEnvelope e, CancellationToken ct)
+        private static async Task CreateEntity(ReadModelDbContext db, JogoCriadoEnvelope e, CancellationToken ct)
         {
-            var now = DateTime.UtcNow;
-            var entity = await db.Jogos.FindAsync(new object?[] { e.JogoId }, ct);
-            if (entity is null)
+            var exists = await db.Jogos.FindAsync([e.JogoId], ct);
+
+            if (exists is null)
             {
                 db.Jogos.Add(new JogoRead
                 {
@@ -67,26 +67,18 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
                     Descricao = e.Descricao,
                     Preco = e.Preco,
                     Categoria = e.Categoria,
-                    Version = 1,
-                    CreatedUtc = now,
-                    UpdatedUtc = now
+                    Version = 0,
+                    CreatedUtc = DateTime.UtcNow
                 });
+
+                await db.SaveChangesAsync(ct);
             }
-            else
-            {
-                entity.Nome = e.Nome;
-                entity.Descricao = e.Descricao;
-                entity.Preco = e.Preco;
-                entity.Categoria = e.Categoria;
-                entity.Version++;
-                entity.UpdatedUtc = now;
-            }
-            await db.SaveChangesAsync(ct);
         }
 
         private static async Task UpdatePreco(ReadModelDbContext db, JogoPrecoAlteradoEnvelope e, CancellationToken ct)
         {
-            var entity = await db.Jogos.FindAsync(new object?[] { e.JogoId }, ct);
+            var entity = await db.Jogos.FindAsync([e.JogoId], ct);
+
             if (entity == null)
             {
                 return;

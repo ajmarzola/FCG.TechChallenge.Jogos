@@ -8,10 +8,7 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
     {
         private readonly ILogger<NotifyPurchaseCompleted> _logger;
 
-        public NotifyPurchaseCompleted(ILogger<NotifyPurchaseCompleted> logger)
-        {
-            _logger = logger;
-        }
+        public NotifyPurchaseCompleted(ILogger<NotifyPurchaseCompleted> logger) => _logger = logger;
 
         [Function(nameof(NotifyPurchaseCompleted))]
         public async Task Run(
