@@ -7,6 +7,7 @@ using Nest;
 using Microsoft.Extensions.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
+using Elasticsearch.Net;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 {
@@ -23,14 +24,48 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 
         public async Task EnsureIndexAsync(CancellationToken ct)
         {
-            var exists = await _es.Indices.ExistsAsync(_index, d => d, ct);
+            // 0) Ping – se isso falhar, é rede/auth
+            var ping = await _es.PingAsync();
+            if (!ping.IsValid)
+                throw new InvalidOperationException($"Elastic ping falhou: {ping.OriginalException?.Message ?? ping.ServerError?.ToString()}\n{ping.DebugInformation}");
+
+            // 1) Já existe?
+            var exists = await _es.Indices.ExistsAsync(_index);
             if (exists.Exists) return;
 
-            var create = await _es.Indices.CreateAsync(_index, c => EsMappings.ConfigureIndex(c, _index), ct);
+            // 2) Tenta criar com seu mapping
+            var create = await _es.Indices.CreateAsync(_index, c => EsMappings.ConfigureIndex(c, _index));
             if (!create.IsValid)
             {
-                throw new InvalidOperationException($"Falha ao criar índice '{_index}': {create.ServerError}");
+                throw new InvalidOperationException(
+                    $"Falha ao criar índice '{_index}': " +
+                    (create.ServerError?.Error?.Reason ?? create.OriginalException?.Message ?? "sem detalhe")
+                    + Environment.NewLine + create.DebugInformation);
             }
+
+            // 3) Tenta fallback "mínimo" p/ isolar problema de analyzer/mapping
+            var fallback = await _es.Indices.CreateAsync(_index, c => c.Map<EsJogoDoc>(m => m.AutoMap()));
+            if (fallback.IsValid) return;
+
+            // 4) Usa LOW-LEVEL pra capturar status & body exatos
+            var low = await _es.LowLevel.Indices.CreateAsync<StringResponse>(
+                _index,
+                PostData.String("{}")  // body vazio/mínimo
+            );
+
+            var statusHi = create.ApiCall?.HttpStatusCode?.ToString() ?? "sem-status";
+            var statusLo = low.HttpStatusCode?.ToString() ?? "sem-status";
+            var reasonHi = create.OriginalException?.Message
+                         ?? create.ServerError?.Error?.Reason
+                         ?? "sem motivo (high level)";
+            var bodyLo = low.Body ?? "(sem body)";
+
+            throw new InvalidOperationException(
+                $"Falha ao criar índice '{_index}'. " +
+                $"HiStatus={statusHi}, HiReason={reasonHi} | " +
+                $"LoStatus={statusLo}, LoBody={bodyLo}\n" +
+                $"{create.DebugInformation}"
+            );
         }
 
         public Task IndexAsync(Guid id, string nome, string? descricao, decimal preco, string? categoria, DateTime createdUtc, DateTime? updatedUtc, CancellationToken ct)

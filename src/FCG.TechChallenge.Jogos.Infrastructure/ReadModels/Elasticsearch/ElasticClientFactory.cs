@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.Options;
 using Nest;
-using Elasticsearch.Net; // <- necessário
+using Elasticsearch.Net;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
@@ -16,21 +16,25 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
             if (string.IsNullOrWhiteSpace(o.Uri))
                 throw new InvalidOperationException("Elastic:Uri não configurado.");
 
+            // RECOMENDO: colocar :9243 no appsettings (Elastic Cloud)
+            // Ex.: https://....es....elastic-cloud.com:9243
             var settings = new ConnectionSettings(new Uri(o.Uri))
                 .DefaultIndex(string.IsNullOrWhiteSpace(o.Index) ? "jogos" : o.Index)
-                .EnableApiVersioningHeader();
+                .EnableApiVersioningHeader() // compat com ES 9 (wire v8)
+                .DisablePing()               // evita HEAD /
+                //.DisableSniffing()           // Cloud não usa sniff
+                .SniffOnStartup(false)
+                .SniffOnConnectionFault(false);
 
-            // 1) Basic Auth (username/senha)
+            // Autenticação: UM dos modos abaixo
             if (!string.IsNullOrWhiteSpace(o.Username) && !string.IsNullOrWhiteSpace(o.Password))
             {
                 settings = settings.BasicAuthentication(o.Username, o.Password);
             }
-            // 2) ApiKey separada (id + key)
             else if (!string.IsNullOrWhiteSpace(o.ApiKeyId) && !string.IsNullOrWhiteSpace(o.ApiKey))
             {
                 settings = settings.ApiKeyAuthentication(new ApiKeyAuthenticationCredentials(o.ApiKeyId, o.ApiKey));
             }
-            // 3) ApiKey combinada no formato "id:key" (muita gente salva assim)
             else if (!string.IsNullOrWhiteSpace(o.ApiKey) && o.ApiKey.Contains(":"))
             {
                 var parts = o.ApiKey.Split(':', 2, StringSplitOptions.RemoveEmptyEntries);
@@ -42,6 +46,17 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
                 throw new InvalidOperationException(
                     "Autenticação do Elastic não configurada. Informe (Username/Password) OU (ApiKeyId + ApiKey) OU ApiKey no formato 'id:key'.");
             }
+
+#if DEBUG
+            settings = settings
+                .DisableDirectStreaming() // loga corpo de erro
+                                          // NÃO use PrettyJson() aqui para evitar '?pretty=true'
+                .OnRequestCompleted(call =>
+                {
+                    Console.WriteLine("=== ELASTIC CALL ===");
+                    Console.WriteLine(call.DebugInformation);
+                });
+#endif
 
             _client = new ElasticClient(settings);
         }

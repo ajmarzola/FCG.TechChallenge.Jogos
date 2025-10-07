@@ -24,10 +24,10 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
 
             // FluentValidation + Behaviors (se já tiver os validators)
             services.AddValidatorsFromAssembly(Assembly.GetAssembly(typeof(CreateJogoCommand))!);
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CreateJogoValidator));
+           // services.AddTransient(typeof(IPipelineBehavior<,>), typeof(CreateJogoValidator));
             // (Opcional) Logging/Tracing behaviors, se quiser
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UpdateJogoValidator));
-            services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UpdateJogoPrecoValidator));
+            //services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UpdateJogoValidator));
+            //services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UpdateJogoPrecoValidator));
             return services;
         }
 

@@ -22,8 +22,6 @@ namespace FCG.TechChallenge.Jogos.Infrastructure
                 opts.Index = elasticSection["Index"] ?? "jogos";
                 opts.Username = elasticSection["Username"];
                 opts.Password = elasticSection["Password"];
-                opts.ApiKeyId = elasticSection["ApiKeyId"];
-                opts.ApiKey = elasticSection["ApiKey"];
             });
 
             // ----------------------------------------------------------------------
