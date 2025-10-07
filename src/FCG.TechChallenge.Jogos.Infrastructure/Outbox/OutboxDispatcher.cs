@@ -1,5 +1,4 @@
 ﻿using Azure.Messaging.ServiceBus;
-using FCG.TechChallenge.Jogos.Domain.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
