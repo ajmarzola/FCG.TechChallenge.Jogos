@@ -4,6 +4,7 @@ using FCG.TechChallenge.Jogos.Application.Queries.Jogos;
 using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
 using FCG.TechChallenge.Jogos.Infrastructure.Outbox;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
 {
@@ -35,10 +36,13 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
         {
             var write = configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("ConnectionStrings:Postgres não configurada.");
             var read  = configuration.GetConnectionString("Postgres") ?? throw new InvalidOperationException("ConnectionStrings:Postgres não configurada.");
+
+            var serviceBus = configuration.GetSection("ServiceBus") ?? throw new InvalidOperationException("ServiceBus:ConnectionString não configurado.");
+
             services.AddScoped<IJogosReadRepository, JogosReadRepository>();
             services.AddSingleton<Domain.Abstractions.IOutbox>(sp => new OutboxStore(write));
             services.AddSingleton(new OutboxRepository(read));
-            services.Configure<ServiceBusOptions>(configuration.GetSection("ServiceBus"));
+            services.Configure<ServiceBusOptions>(serviceBus);
             services.AddHostedService<OutboxDispatcher>();
             return services;
         }

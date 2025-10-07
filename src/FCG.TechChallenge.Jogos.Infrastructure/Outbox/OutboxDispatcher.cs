@@ -14,7 +14,7 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var connStr = sbOpt.Value.ConnectionString ?? throw new InvalidOperationException("ServiceBus ConnectionString vazio");
+            var connStr = sbOpt.Value.ConnectionString;
             var queue = sbOpt.Value.QueueName ?? "jogos-outbox";
 
             await using var client = new ServiceBusClient(connStr);
