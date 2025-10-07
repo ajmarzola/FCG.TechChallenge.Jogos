@@ -26,7 +26,7 @@ namespace FCG.TechChallenge.Jogos.Infrastructure
                 opts.DisablePing = bool.TryParse(elasticSection["DisablePing"], out var dp) && dp;
 
                 // Credenciais — escolha 1 formato:
-                var apiKeyBase64 = elasticSection["ApiKeyBase64"]; // base64(id:secret)
+                var apiKeyBase64 = string.Empty;//elasticSection["ApiKeyBase64"]; // base64(id:secret)
                 var apiKeyId = elasticSection["ApiKeyId"];     // id
                 var apiKeySecret = elasticSection["ApiKey"];       // secret
 

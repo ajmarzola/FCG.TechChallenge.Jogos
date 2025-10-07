@@ -23,6 +23,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.TechChallenge.Jogos.Con
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.TechChallenge.Jogos.Api", "src\FCG.TechChallenge.Jogos.Api\FCG.TechChallenge.Jogos.Api.csproj", "{557173E2-E216-4336-9F1D-6608D483ABEE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.TechChallenge.Jogos.ElasticSearchTests", "tests\FCG.TechChallenge.Jogos.ElasticSearchTests\FCG.TechChallenge.Jogos.ElasticSearchTests.csproj", "{78C92FEE-C5F1-4E3C-8B59-4B65E46FD098}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -61,6 +63,10 @@ Global
 		{557173E2-E216-4336-9F1D-6608D483ABEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{557173E2-E216-4336-9F1D-6608D483ABEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{557173E2-E216-4336-9F1D-6608D483ABEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{78C92FEE-C5F1-4E3C-8B59-4B65E46FD098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{78C92FEE-C5F1-4E3C-8B59-4B65E46FD098}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{78C92FEE-C5F1-4E3C-8B59-4B65E46FD098}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{78C92FEE-C5F1-4E3C-8B59-4B65E46FD098}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,6 +80,7 @@ Global
 		{ECE2E600-8D00-FF94-2113-A436F24730BD} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{D2E4639D-64D8-4815-AD0C-CD949202EBEE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{557173E2-E216-4336-9F1D-6608D483ABEE} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{78C92FEE-C5F1-4E3C-8B59-4B65E46FD098} = {B524016E-D70C-4362-93A4-470174DD80AE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {878BF01A-7DF3-4D05-AFEC-D5C8C7111D89}
