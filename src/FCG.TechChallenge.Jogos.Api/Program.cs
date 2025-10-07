@@ -17,8 +17,7 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Configuration["ConnectionStrings:Postgres"];
 var serviceBus = builder.Configuration.GetSection("ServiceBus") ?? throw new InvalidOperationException("ServiceBus:ConnectionString não configurado.");
 
-// ---------- CONFIG & DB ----------
-var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Configuration["ConnectionStrings:Postgres"];
+
 if (string.IsNullOrWhiteSpace(cs))
 {
     throw new InvalidOperationException("ConnectionStrings:Postgres vazio/ausente.");
