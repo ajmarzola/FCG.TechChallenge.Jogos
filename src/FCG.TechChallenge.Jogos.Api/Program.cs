@@ -36,12 +36,16 @@ builder.Services.AddDbContext<ReadModelDbContext>(opt =>
 
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
 builder.Services.Configure<ServiceBusOptions>(builder.Configuration.GetSection("ServiceBus"));
-builder.Services.Configure<ElasticOptions>(builder.Configuration.GetSection("Elastic"));
+
 
 // ---------- OUTBOX / EVENTSTORE ----------
 builder.Services.AddHostedService<OutboxDispatcher>();
 builder.Services.AddScoped<IEventStore, PgEventStore>();
 builder.Services.AddScoped<IOutbox, PgOutbox>();
+
+builder.Services.AddScoped<OutboxRepository>(_ => new OutboxRepository(cs));
+
+builder.Services.AddScoped<IJogosReadRepository, JogosReadRepositoryElastic>();
 
 // ---------- APP + INFRA (inclui Elasticsearch) ----------
 FCG.TechChallenge.Jogos.Infrastructure.DependencyInjection.AddInfrastructure(builder.Services, builder.Configuration);

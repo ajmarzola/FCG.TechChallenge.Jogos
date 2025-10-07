@@ -1,4 +1,9 @@
-﻿using Nest;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Nest;
 using Microsoft.Extensions.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
@@ -23,7 +28,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 
             var create = await _es.Indices.CreateAsync(_index, c => EsMappings.ConfigureIndex(c, _index), ct);
             if (!create.IsValid)
+            {
                 throw new InvalidOperationException($"Falha ao criar índice '{_index}': {create.ServerError}");
+            }
         }
 
         public Task IndexAsync(Guid id, string nome, string? descricao, decimal preco, string? categoria, DateTime createdUtc, DateTime? updatedUtc, CancellationToken ct)
@@ -44,7 +51,6 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
         }
 
         public Task PartialUpdatePrecoAsync(Guid id, decimal novoPreco, CancellationToken ct)
-            // note os dois genéricos: <TDocument, TPartial>
             => _es.UpdateAsync<EsJogoDoc, object>(
                 id.ToString("N"),
                 u => u.Index(_index).Doc(new { Preco = novoPreco }),
@@ -79,9 +85,6 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
                 b.Index(_index);
                 foreach (var d in docs)
                     b.Index<EsJogoDoc>(bi => bi.Document(d).Id(d.Id));
-
-                // Se quiser refresh automático, descomente:
-                // b.Refresh(Nest.Refresh.False);
                 return b;
             }, ct);
 
@@ -91,7 +94,6 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
                 throw new InvalidOperationException($"BulkIndex com erros: {errors}");
             }
 
-            // Refresh explícito do índice (selector + ct)
             await _es.Indices.RefreshAsync(_index, r => r, ct);
         }
 
