@@ -2,15 +2,16 @@
 {
     public sealed class ElasticOptions
     {
-        public string Uri { get; set; } = default!;
-        public string Index { get; set; } = "jogos";
+        public string CloudId { get; set; } = string.Empty;
 
-        // Opção 1: Basic Auth
-        public string? Username { get; set; }
-        public string? Password { get; set; }
-
-        // Opção 2/3: API Key (id + key) OU "id:key"
+        // Forma 1: dois campos
         public string? ApiKeyId { get; set; }
-        public string? ApiKey { get; set; }
+        public string? ApiKey { get; set; } // secret
+
+        // Forma 2: um campo
+        public string? ApiKeyBase64 { get; set; }
+
+        public string Index { get; set; } = "jogos";
+        public bool DisablePing { get; set; } = false;
     }
 }

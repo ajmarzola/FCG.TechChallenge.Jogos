@@ -17,13 +17,16 @@ using FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
+using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var cs = builder.Configuration.GetConnectionString("Postgres")
          ?? builder.Configuration["ConnectionStrings:Postgres"];
 if (string.IsNullOrWhiteSpace(cs))
+{
     throw new InvalidOperationException("ConnectionStrings:Postgres vazio/ausente.");
+}
 
 var serviceBus = builder.Configuration.GetSection("ServiceBus")
                ?? throw new InvalidOperationException("ServiceBus não configurado.");
@@ -40,8 +43,7 @@ builder.Services.AddDbContext<ReadModelDbContext>(opt =>
 // ---------- OPTIONS ----------
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
 builder.Services.Configure<ServiceBusOptions>(serviceBus);
-// (Opcional) Se o Elastic já é configurado dentro do AddInfrastructure, remova a linha abaixo:
-// builder.Services.Configure<ElasticOptions>(builder.Configuration.GetSection("Elastic"));
+builder.Services.AddElasticSearch(builder.Configuration);
 
 // ---------- OUTBOX / EVENTSTORE ----------
 builder.Services.AddHostedService<OutboxDispatcher>();
@@ -87,7 +89,9 @@ app.MapGet("/health/es", async (
     // Ping
     var ping = await es.PingAsync();
     if (!ping.IsValid)
+    {
         return Results.Problem($"Ping inválido: {ping.OriginalException?.Message ?? ping.ServerError?.ToString()}");
+    }
 
     // Garante índice (aqui sim usamos ct)
     try { await indexer.EnsureIndexAsync(ct); }
@@ -137,17 +141,23 @@ app.MapPost("/health/es/smoke", async (
     }, i => i.Index(index).Id(id));
 
     if (!indexResp.IsValid)
+    {
         return Results.Problem($"Index falhou: {indexResp.OriginalException?.Message ?? indexResp.ServerError?.ToString()}");
+    }
 
     // GET
     var getResp = await es.GetAsync<dynamic>(id, g => g.Index(index));
     if (!getResp.Found)
+    {
         return Results.Problem("Get não encontrou o documento indexado.");
+    }
 
     // DELETE
     var delResp = await es.DeleteAsync<dynamic>(id, d => d.Index(index));
     if (!delResp.IsValid)
+    {
         return Results.Problem($"Delete falhou: {delResp.OriginalException?.Message ?? delResp.ServerError?.ToString()}");
+    }
 
     return Results.Ok(new { ok = true, index, id });
 })
@@ -286,7 +296,9 @@ app.MapGet("/jogos/{id:guid}/recommendations", async (
     var doc = similar.FirstOrDefault();
     IReadOnlyList<EsJogoDoc> sameCat = Array.Empty<EsJogoDoc>();
     if (doc is not null && !string.IsNullOrWhiteSpace(doc.Categoria))
+    {
         sameCat = await rec.FromSameCategoryAsync(id, doc.Categoria, k, ct);
+    }
 
     return Results.Ok(new
     {
@@ -296,5 +308,7 @@ app.MapGet("/jogos/{id:guid}/recommendations", async (
 })
 .WithName("JogosRecommendations")
 .Produces(StatusCodes.Status200OK);
+
+app.MapGet("/ping", () => Results.Text("pong"));
 
 app.Run();

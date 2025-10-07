@@ -12,16 +12,10 @@ namespace FCG.TechChallenge.Jogos.Api.Controllers.Admin
     // [Authorize(Roles = "ADMIN")] // habilite se o Gateway propaga JWT e roles
     [ApiController]
     [Route("admin/search")]
-    public sealed class SearchAdminController : ControllerBase
+    public sealed class SearchAdminController(JogoIndexer indexer, ReadModelDbContext db) : ControllerBase
     {
-        private readonly JogoIndexer _indexer;
-        private readonly ReadModelDbContext _db;
-
-        public SearchAdminController(JogoIndexer indexer, ReadModelDbContext db)
-        {
-            _indexer = indexer;
-            _db = db;
-        }
+        private readonly JogoIndexer _indexer = indexer;
+        private readonly ReadModelDbContext _db = db;
 
         /// <summary>
         /// Recria o índice do Elasticsearch e reindexa todos os jogos (full rebuild).

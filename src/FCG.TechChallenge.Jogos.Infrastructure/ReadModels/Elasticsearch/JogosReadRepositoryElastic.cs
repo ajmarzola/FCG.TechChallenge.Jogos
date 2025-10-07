@@ -5,11 +5,9 @@ using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 {
-    public sealed class JogosReadRepositoryElastic : IJogosReadRepository
+    public sealed class JogosReadRepositoryElastic(JogoSearchQueries q) : IJogosReadRepository
     {
-        private readonly JogoSearchQueries _q;
-
-        public JogosReadRepositoryElastic(JogoSearchQueries q) => _q = q;
+        private readonly JogoSearchQueries _q = q;
 
         public async Task<JogoDto?> GetByIdAsync(Guid id, CancellationToken ct)
         {

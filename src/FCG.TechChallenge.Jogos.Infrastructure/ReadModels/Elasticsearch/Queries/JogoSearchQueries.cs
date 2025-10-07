@@ -4,16 +4,10 @@ using Nest;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries
 {
-    public sealed class JogoSearchQueries
+    public sealed class JogoSearchQueries(ElasticClientFactory factory, IOptions<Config.Options.ElasticOptions> opt)
     {
-        private readonly IElasticClient _es;
-        private readonly string _index;
-
-        public JogoSearchQueries(ElasticClientFactory factory, IOptions<Config.Options.ElasticOptions> opt)
-        {
-            _es = factory.Create();
-            _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
-        }
+        private readonly IElasticClient _es = factory.Create();
+        private readonly string _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
 
         public async Task<SearchResultDto<JogoDto>> SearchAsync(
             string? termo,
@@ -25,8 +19,15 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             string? sort = null,
             CancellationToken ct = default)
         {
-            if (page <= 0) page = 1;
-            if (pageSize <= 0) pageSize = 20;
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
+            if (pageSize <= 0)
+            {
+                pageSize = 20;
+            }
 
             var must = new List<Func<QueryContainerDescriptor<EsJogoDoc>, QueryContainer>>();
             var filter = new List<Func<QueryContainerDescriptor<EsJogoDoc>, QueryContainer>>();
@@ -43,14 +44,18 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             }
 
             if (!string.IsNullOrWhiteSpace(categoria))
+            {
                 filter.Add(f => f.Term(t => t.Field(ff => ff.Categoria).Value(categoria)));
+            }
 
             if (precoMin.HasValue || precoMax.HasValue)
+            {
                 filter.Add(f => f.Range(r => r
                     .Field(ff => ff.Preco)
                     .GreaterThanOrEquals(precoMin.HasValue ? (double?)precoMin.Value : null) // cast p/ double?
                     .LessThanOrEquals(precoMax.HasValue ? (double?)precoMax.Value : null)
                 ));
+            }
 
             var from = (page - 1) * pageSize;
 
@@ -93,7 +98,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
                 return s;
             }, ct);
 
-            if (!res.IsValid) throw new InvalidOperationException($"Search inválida: {res.ServerError}");
+            if (!res.IsValid)
+            {
+                throw new InvalidOperationException($"Search inválida: {res.ServerError}");
+            }
 
             var items = res.Hits.Select(h => {
                 var src = h.Source!;
@@ -143,7 +151,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
 
         public async Task<IReadOnlyList<string>> AutocompleteAsync(string prefix, int size = 10, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(prefix)) return Array.Empty<string>();
+            if (string.IsNullOrWhiteSpace(prefix))
+            {
+                return Array.Empty<string>();
+            }
 
             var res = await _es.SearchAsync<EsJogoDoc>(s => s
                 .Index(_index)

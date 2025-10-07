@@ -13,15 +13,37 @@ namespace FCG.TechChallenge.Jogos.Infrastructure
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             // ----------------------------------------------------------------------
-            // 🔹 ELASTIC: configuração manual sem Bind()
+            // 🔹 ELASTIC: bind seguro (NÃO misturar formatos de credencial)
             // ----------------------------------------------------------------------
             var elasticSection = configuration.GetSection("Elastic");
+
             services.Configure<ElasticOptions>(opts =>
             {
-                opts.Uri = elasticSection["Uri"] ?? "";
-                opts.Index = elasticSection["Index"] ?? "jogos";
-                opts.Username = elasticSection["Username"];
-                opts.Password = elasticSection["Password"];
+                opts.CloudId = (elasticSection["CloudId"] ?? string.Empty).Trim();
+                opts.Index = (elasticSection["Index"] ?? "jogos").Trim().TrimEnd('}', '/', ' ');
+
+                // DisablePing seguro
+                opts.DisablePing = bool.TryParse(elasticSection["DisablePing"], out var dp) && dp;
+
+                // Credenciais — escolha 1 formato:
+                var apiKeyBase64 = string.Empty;//elasticSection["ApiKeyBase64"]; // base64(id:secret)
+                var apiKeyId = elasticSection["ApiKeyId"];     // id
+                var apiKeySecret = elasticSection["ApiKey"];       // secret
+
+                if (!string.IsNullOrWhiteSpace(apiKeyBase64))
+                {
+                    // ✔️ Formato B: Base64 — usa só ApiKeyBase64
+                    opts.ApiKeyBase64 = apiKeyBase64.Trim();
+                    opts.ApiKeyId = null;
+                    opts.ApiKey = null;
+                }
+                else
+                {
+                    // ✔️ Formato A: ID + Secret
+                    opts.ApiKeyId = apiKeyId?.Trim();
+                    opts.ApiKey = apiKeySecret?.Trim();
+                    opts.ApiKeyBase64 = null;
+                }
             });
 
             // ----------------------------------------------------------------------

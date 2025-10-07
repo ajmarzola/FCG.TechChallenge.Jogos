@@ -4,11 +4,9 @@ using System.Text;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
 {
-    public sealed class OutboxStore : IOutbox
+    public sealed class OutboxStore(string connectionString) : IOutbox
     {
-        private readonly string _cs;
-
-        public OutboxStore(string connectionString) => _cs = connectionString;
+        private readonly string _cs = connectionString;
 
         public async Task EnqueueAsync(string type, string payload, CancellationToken ct = default)
         {

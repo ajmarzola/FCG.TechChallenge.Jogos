@@ -3,14 +3,9 @@ using Microsoft.Extensions.Logging;
 
 namespace FCG.TechChallenge.Jogos.Functions.Functions
 {
-    public class HotMetricsAggregator
+    public class HotMetricsAggregator(ILoggerFactory loggerFactory)
     {
-        private readonly ILogger _logger;
-
-        public HotMetricsAggregator(ILoggerFactory loggerFactory)
-        {
-            _logger = loggerFactory.CreateLogger<HotMetricsAggregator>();
-        }
+        private readonly ILogger _logger = loggerFactory.CreateLogger<HotMetricsAggregator>();
 
         [Function("HotMetricsAggregator")]
         public void Run([TimerTrigger("0 */5 * * * *")] TimerInfo myTimer)
