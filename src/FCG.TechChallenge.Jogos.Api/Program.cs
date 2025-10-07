@@ -309,4 +309,6 @@ app.MapGet("/jogos/{id:guid}/recommendations", async (
 .WithName("JogosRecommendations")
 .Produces(StatusCodes.Status200OK);
 
+app.MapGet("/ping", () => Results.Text("pong"));
+
 app.Run();
