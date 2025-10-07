@@ -169,3 +169,5 @@
 /.vs/FCG.TechChallenge.Jogos/v17/TestStore/0
 /.vs
 /.env
+/tests/FCG.TechChallenge.Jogos.ElasticSearchTests/obj
+/tests/FCG.TechChallenge.Jogos.ElasticSearchTests/bin/Debug/net8.0
