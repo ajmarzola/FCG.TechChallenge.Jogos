@@ -13,6 +13,8 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
         JogoIndexer indexer,
         ILogger<ProjectToElasticsearch> logger)
     {
+        private static readonly JsonSerializerOptions _json = new(JsonSerializerDefaults.Web);
+
         [Function(nameof(ProjectToElasticsearch))]
         public async Task Run(
             [ServiceBusTrigger("%ServiceBus:QueueName%", Connection = "ServiceBus:ConnectionString")]
@@ -59,16 +61,16 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
                     // outros tipos...
 
                     default:
-                        logger.LogWarning("Tipo de evento desconhecido: {Type}", type);
+                        logger.LogWarning("Unhandled event type: {Type}", type);
                         break;
                 }
 
-                await actions.CompleteMessageAsync(message);
+                await actions.CompleteMessageAsync(message, ct);
             }
             catch (Exception ex)
             {
-                logger.LogError(ex, "Erro projetando mensagem {Id}", message.MessageId);
-                await actions.AbandonMessageAsync(message);
+                logger.LogError(ex, "Failed processing message {MessageId}", message.MessageId);
+                await actions.AbandonMessageAsync(message, cancellationToken: ct);
             }
         }
 
@@ -76,7 +78,6 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
         private static async Task<JogoRead> UpsertJogoRead(ReadModelDbContext db, JogoCriadoEnvelope e, CancellationToken ct)
         {
             var now = DateTime.UtcNow;
-
             var entity = await db.Jogos.FindAsync(new object?[] { e.JogoId }, ct);
             if (entity is null)
             {

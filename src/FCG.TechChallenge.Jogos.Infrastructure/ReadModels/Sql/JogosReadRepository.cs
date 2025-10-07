@@ -14,27 +14,20 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
 
         public async Task<Paged<JogoDto>> SearchAsync(string? termo, int page, int pageSize, CancellationToken ct)
         {
-            if (page <= 0) page = 1;
-            if (pageSize <= 0) pageSize = 10;
-            if (pageSize > 100) pageSize = 100;
+            var sqlWhere = string.IsNullOrWhiteSpace(termo)
+                ? ""
+                : "WHERE (unaccent(nome) ILIKE unaccent(@termo) OR unaccent(categoria) ILIKE unaccent(@termo))";
 
-            termo = string.IsNullOrWhiteSpace(termo) ? null : termo.Trim();
+            const string sqlCountTpl = @"SELECT COUNT(*) FROM public.jogo_read {WHERE}";
+            const string sqlPageTpl = @"
+        SELECT id, nome, descricao, preco, categoria, version, created_utc AS CreatedUtc, updated_utc AS UpdatedUtc
+        FROM public.jogo_read
+        {WHERE}
+        ORDER BY nome
+        OFFSET @skip LIMIT @take;";
 
-            // Troque "jogos_view" para o nome da sua tabela/VIEW de leitura
-            const string from = "FROM public.jogo_view";
-
-            var where = @"WHERE (@termo IS NULL OR
-                            nome ILIKE '%' || @termo || '%' OR
-                            descricao ILIKE '%' || @termo || '%' OR
-                            categoria ILIKE '%' || @termo || '%')";
-
-            var sqlCount = $"SELECT COUNT(*) {from} {where};";
-            var sqlPage = $@"
-            SELECT id, nome, descricao, preco, categoria
-            {from}
-            {where}
-            ORDER BY nome
-            LIMIT @take OFFSET @skip;";
+            var sqlCount = sqlCountTpl.Replace("{WHERE}", sqlWhere);
+            var sqlPage = sqlPageTpl.Replace("{WHERE}", sqlWhere);
 
             var skip = (page - 1) * pageSize;
             var take = pageSize;
@@ -42,12 +35,24 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql
             await using var conn = new NpgsqlConnection(_cs);
             await conn.OpenAsync(ct);
 
-            var param = new { termo, take, skip };
+            var p = new { termo = $"%{termo}%", skip, take };
 
-            var total = await conn.ExecuteScalarAsync<int>(sqlCount, new { termo });
-            var items = (await conn.QueryAsync<JogoDto>(sqlPage, new { termo, take, skip })).ToList();
+            var total = await conn.ExecuteScalarAsync<int>(sqlCount, p);
+            var items = (await conn.QueryAsync<JogoDto>(sqlPage, p)).ToList();
 
             return new Paged<JogoDto>(items, total, page, pageSize);
+        }
+
+
+        public async Task<JogoDto?> GetByIdAsync(Guid id, CancellationToken ct)
+        {
+            const string sql = @"SELECT id, nome, descricao, preco, categoria, version, created_utc AS CreatedUtc, updated_utc AS UpdatedUtc
+                         FROM public.jogo_read
+                         WHERE id = @id";
+
+            await using var conn = new NpgsqlConnection(_cs);
+            await conn.OpenAsync(ct);
+            return await conn.QueryFirstOrDefaultAsync<JogoDto>(sql, new { id });
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using FCG.TechChallenge.Jogos.Domain.Abstractions;
+﻿using FCG.TechChallenge.Jogos.Application.Abstractions;
 using Npgsql;
 using System.Text;
 

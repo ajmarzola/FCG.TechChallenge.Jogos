@@ -3,7 +3,6 @@ using System;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,16 +11,14 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace FCG.TechChallenge.Jogos.Infrastructure.Infrastructure.Persistence.ReadModel.Migrations
 {
     [DbContext(typeof(ReadModelDbContext))]
-    [Migration("20250927201207_ViewJogos")]
-    partial class ViewJogos
+    partial class ReadModelDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("public")
-                .HasAnnotation("ProductVersion", "8.0.20")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);

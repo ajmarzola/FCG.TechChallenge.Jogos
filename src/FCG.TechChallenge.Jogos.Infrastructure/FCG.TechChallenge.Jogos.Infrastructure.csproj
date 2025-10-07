@@ -5,8 +5,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="EventStore\Migrations\" />
-    <Folder Include="Persistence\ReadModel\Migrations\" />
+    <Folder Include="Infrastructure\Persistence\EventStore\" />
+    <Folder Include="Infrastructure\Persistence\ReadModel\" />
     <Folder Include="Serialization\" />
   </ItemGroup>
   <ItemGroup>

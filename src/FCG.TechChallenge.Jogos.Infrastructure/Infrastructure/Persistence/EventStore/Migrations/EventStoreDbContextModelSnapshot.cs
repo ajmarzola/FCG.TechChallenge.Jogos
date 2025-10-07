@@ -18,12 +18,12 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Infrastructure.Persistence.Even
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("public")
-                .HasAnnotation("ProductVersion", "8.0.20")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventRow", b =>
+            modelBuilder.Entity("FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore.EventRow", b =>
                 {
                     b.Property<string>("StreamId")
                         .HasMaxLength(100)
@@ -60,7 +60,7 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Infrastructure.Persistence.Even
                     b.ToTable("Events", "public");
                 });
 
-            modelBuilder.Entity("FCG.TechChallenge.Jogos.Infrastructure.Persistence.OutboxRow", b =>
+            modelBuilder.Entity("FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore.OutboxRow", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()

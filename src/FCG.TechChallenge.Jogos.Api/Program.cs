@@ -14,19 +14,18 @@ using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Configuration["ConnectionStrings:Postgres"];
+var serviceBus = builder.Configuration.GetSection("ServiceBus") ?? throw new InvalidOperationException("ServiceBus:ConnectionString não configurado.");
 
 // ---------- CONFIG & DB ----------
 var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Configuration["ConnectionStrings:Postgres"];
 if (string.IsNullOrWhiteSpace(cs))
 {
-    throw new InvalidOperationException("ConnectionStrings:Postgres está vazio/ausente.");
+    throw new InvalidOperationException("ConnectionStrings:Postgres vazio/ausente.");
 }
 
-builder.Services.AddDbContext<EventStoreDbContext>(opt =>
-{
-    opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public"))
-       .UseSnakeCaseNamingConvention();
-});
+builder.Services.AddDbContext<EventStoreDbContext>(opt => opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public")).UseSnakeCaseNamingConvention());
+builder.Services.AddDbContext<ReadModelDbContext>(opt => opt.UseNpgsql(cs, x => x.MigrationsHistoryTable("__EFMigrationsHistory_Read", "public")).UseSnakeCaseNamingConvention());
 
 builder.Services.AddDbContext<ReadModelDbContext>(opt =>
 {
@@ -35,7 +34,10 @@ builder.Services.AddDbContext<ReadModelDbContext>(opt =>
 });
 
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
-builder.Services.Configure<ServiceBusOptions>(builder.Configuration.GetSection("ServiceBus"));
+
+
+builder.Services.Configure<ServiceBusOptions>(serviceBus);
+builder.Services.Configure<ElasticOptions>(builder.Configuration.GetSection("Elastic"));
 
 
 // ---------- OUTBOX / EVENTSTORE ----------
