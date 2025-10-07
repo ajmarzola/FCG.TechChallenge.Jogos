@@ -17,6 +17,7 @@ using FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
+using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,8 +41,7 @@ builder.Services.AddDbContext<ReadModelDbContext>(opt =>
 // ---------- OPTIONS ----------
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
 builder.Services.Configure<ServiceBusOptions>(serviceBus);
-// (Opcional) Se o Elastic já é configurado dentro do AddInfrastructure, remova a linha abaixo:
-// builder.Services.Configure<ElasticOptions>(builder.Configuration.GetSection("Elastic"));
+builder.Services.AddElasticSearch(builder.Configuration);
 
 // ---------- OUTBOX / EVENTSTORE ----------
 builder.Services.AddHostedService<OutboxDispatcher>();

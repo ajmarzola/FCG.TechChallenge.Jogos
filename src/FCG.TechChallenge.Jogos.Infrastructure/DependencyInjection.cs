@@ -18,10 +18,12 @@ namespace FCG.TechChallenge.Jogos.Infrastructure
             var elasticSection = configuration.GetSection("Elastic");
             services.Configure<ElasticOptions>(opts =>
             {
-                opts.Uri = elasticSection["Uri"] ?? "";
-                opts.Index = elasticSection["Index"] ?? "jogos";
-                opts.Username = elasticSection["Username"];
-                opts.Password = elasticSection["Password"];
+
+                opts.CloudId = elasticSection["CloudId"] ?? "";
+                opts.ApiKeyId = elasticSection["ApiKeyId"] ?? "jogos";
+                opts.ApiKey = elasticSection["ApiKey"];
+                opts.Index = elasticSection["Index"];
+                opts.DisablePing = bool.Parse(elasticSection["DisablePing"]);
             });
 
             // ----------------------------------------------------------------------
