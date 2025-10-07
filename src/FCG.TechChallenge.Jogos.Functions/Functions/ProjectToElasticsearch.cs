@@ -113,7 +113,10 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
         private static async Task UpdatePreco(ReadModelDbContext db, JogoPrecoAlteradoEnvelope e, CancellationToken ct)
         {
             var entity = await db.Jogos.FindAsync(new object?[] { e.JogoId }, ct);
-            if (entity == null) return;
+            if (entity == null)
+            {
+                return;
+            }
 
             entity.Preco = e.NovoPreco;
             entity.Version++;

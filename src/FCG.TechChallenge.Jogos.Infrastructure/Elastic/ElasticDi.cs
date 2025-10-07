@@ -39,7 +39,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Elastic
                     .ThrowExceptions();
 
                 if (opt.DisablePing)
+                {
                     settings = settings.DisablePing();
+                }
 
                 // CloudId usa CloudConnectionPool; sniffing já não é utilizado
                 return new ElasticClient(settings);

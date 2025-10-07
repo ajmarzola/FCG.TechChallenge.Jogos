@@ -4,11 +4,9 @@ using Microsoft.Extensions.Logging;
 
 namespace FCG.TechChallenge.Jogos.Functions.Functions
 {
-    public class NotifyPurchaseCompleted
+    public class NotifyPurchaseCompleted(ILogger<NotifyPurchaseCompleted> logger)
     {
-        private readonly ILogger<NotifyPurchaseCompleted> _logger;
-
-        public NotifyPurchaseCompleted(ILogger<NotifyPurchaseCompleted> logger) => _logger = logger;
+        private readonly ILogger<NotifyPurchaseCompleted> _logger = logger;
 
         [Function(nameof(NotifyPurchaseCompleted))]
         public async Task Run(

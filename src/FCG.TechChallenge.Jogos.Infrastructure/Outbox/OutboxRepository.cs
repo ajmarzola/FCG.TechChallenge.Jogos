@@ -3,10 +3,9 @@ using Npgsql;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
 {
-    public sealed class OutboxRepository
+    public sealed class OutboxRepository(string connectionString)
     {
-        private readonly string _cs;
-        public OutboxRepository(string connectionString) => _cs = connectionString;
+        private readonly string _cs = connectionString;
 
         public async Task<IReadOnlyList<OutboxItem>> PeekPendingAsync(int maxItems, CancellationToken ct = default)
         {

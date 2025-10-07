@@ -5,14 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace FCG.TechChallenge.Jogos.Functions.Functions
 {
-    public class PaymentsWebhook
+    public class PaymentsWebhook(ILogger<PaymentsWebhook> logger)
     {
-        private readonly ILogger<PaymentsWebhook> _logger;
-
-        public PaymentsWebhook(ILogger<PaymentsWebhook> logger)
-        {
-            _logger = logger;
-        }
+        private readonly ILogger<PaymentsWebhook> _logger = logger;
 
         [Function("PaymentsWebhook")]
         public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)

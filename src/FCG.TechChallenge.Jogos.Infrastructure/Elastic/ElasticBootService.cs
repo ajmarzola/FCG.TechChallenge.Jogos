@@ -14,18 +14,11 @@ using System.Threading.Tasks;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Elastic
 {
-    public sealed class ElasticBootService : IHostedService
+    public sealed class ElasticBootService(IElasticClient es, IOptions<ElasticOptions> opt, ILogger<ElasticBootService> log) : IHostedService
     {
-        private readonly IElasticClient _es;
-        private readonly ILogger<ElasticBootService> _log;
-        private readonly string _index;
-
-        public ElasticBootService(IElasticClient es, IOptions<ElasticOptions> opt, ILogger<ElasticBootService> log)
-        {
-            _es = es;
-            _log = log;
-            _index = (opt.Value.Index ?? "jogos").Trim().TrimEnd('}', '/', ' ');
-        }
+        private readonly IElasticClient _es = es;
+        private readonly ILogger<ElasticBootService> _log = log;
+        private readonly string _index = (opt.Value.Index ?? "jogos").Trim().TrimEnd('}', '/', ' ');
 
         public async Task StartAsync(CancellationToken ct)
         {

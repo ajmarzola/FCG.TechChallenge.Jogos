@@ -11,27 +11,27 @@ using Elasticsearch.Net;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 {
-    public sealed class JogoIndexer
+    public sealed class JogoIndexer(ElasticClientFactory factory, IOptions<ElasticOptions> opt)
     {
-        private readonly IElasticClient _es;
-        private readonly string _index;
-
-        public JogoIndexer(ElasticClientFactory factory, IOptions<ElasticOptions> opt)
-        {
-            _es = factory.Create();
-            _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
-        }
+        private readonly IElasticClient _es = factory.Create();
+        private readonly string _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
 
         public async Task EnsureIndexAsync(CancellationToken ct)
         {
             // 0) Ping – se isso falhar, é rede/auth
             var ping = await _es.PingAsync();
+
             if (!ping.IsValid)
+            {
                 throw new InvalidOperationException($"Elastic ping falhou: {ping.OriginalException?.Message ?? ping.ServerError?.ToString()}\n{ping.DebugInformation}");
+            }
 
             // 1) Já existe?
             var exists = await _es.Indices.ExistsAsync(_index);
-            if (exists.Exists) return;
+            if (exists.Exists)
+            {
+                return;
+            }
 
             // 2) Tenta criar com seu mapping
             var create = await _es.Indices.CreateAsync(_index, c => EsMappings.ConfigureIndex(c, _index));
@@ -45,7 +45,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 
             // 3) Tenta fallback "mínimo" p/ isolar problema de analyzer/mapping
             var fallback = await _es.Indices.CreateAsync(_index, c => c.Map<EsJogoDoc>(m => m.AutoMap()));
-            if (fallback.IsValid) return;
+            if (fallback.IsValid)
+            {
+                return;
+            }
 
             // 4) Usa LOW-LEVEL pra capturar status & body exatos
             var low = await _es.LowLevel.Indices.CreateAsync<StringResponse>(
@@ -119,7 +122,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
             {
                 b.Index(_index);
                 foreach (var d in docs)
+                {
                     b.Index<EsJogoDoc>(bi => bi.Document(d).Id(d.Id));
+                }
+
                 return b;
             }, ct);
 
@@ -136,7 +142,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
         {
             var exists = await _es.Indices.ExistsAsync(_index, d => d, ct);
             if (exists.Exists)
+            {
                 await _es.Indices.DeleteAsync(_index, d => d, ct);
+            }
 
             await EnsureIndexAsync(ct);
 

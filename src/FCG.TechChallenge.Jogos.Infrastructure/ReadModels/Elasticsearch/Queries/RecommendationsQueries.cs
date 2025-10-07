@@ -9,16 +9,10 @@ using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries
 {
-    public sealed class RecommendationsQueries
+    public sealed class RecommendationsQueries(ElasticClientFactory factory, IOptions<ElasticOptions> opt)
     {
-        private readonly IElasticClient _es;
-        private readonly string _index;
-
-        public RecommendationsQueries(ElasticClientFactory factory, IOptions<ElasticOptions> opt)
-        {
-            _es = factory.Create();
-            _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
-        }
+        private readonly IElasticClient _es = factory.Create();
+        private readonly string _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
 
         // Similaridade por conteúdo (nome/descrição) sem usar MinimumTermFrequency/MinimumDocumentFrequency
         public async Task<IReadOnlyList<EsJogoDoc>> SimilarByTextAsync(Guid jogoId, int size = 10, CancellationToken ct = default)
@@ -43,7 +37,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
         // Mesma categoria (exclui o próprio)
         public async Task<IReadOnlyList<EsJogoDoc>> FromSameCategoryAsync(Guid jogoId, string? categoria, int size = 10, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(categoria)) return Array.Empty<EsJogoDoc>();
+            if (string.IsNullOrWhiteSpace(categoria))
+            {
+                return Array.Empty<EsJogoDoc>();
+            }
 
             var res = await _es.SearchAsync<EsJogoDoc>(s => s
                 .Index(_index)
