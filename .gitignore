@@ -169,3 +169,6 @@
 /.vs/FCG.TechChallenge.Jogos/v17/TestStore/0
 /.vs
 /.env
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Debug/net8.0/FCG.TechChallenge.Jogos.IntegrationTests.assets.cache
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Debug/net8.0/FCG.TechChallenge.Jogos.IntegrationTests.csproj.AssemblyReference.cache
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Debug/net8.0/FCG.TechChallenge.Jogos.IntegrationTests.GeneratedMSBuildEditorConfig.editorconfig
