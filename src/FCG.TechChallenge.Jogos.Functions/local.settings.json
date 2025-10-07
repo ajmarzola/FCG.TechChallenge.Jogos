@@ -3,10 +3,17 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "ServiceBus:ConnectionString": "sb-fiap-games-prod.servicebus.windows.net",
-    "ServiceBus:QueueName": "jogos-outbox",
-    "Elastic:Uri": "http://localhost:9200",
-    "Elastic:Index": "jogos",
-    "Postgres": "Host=dpg-d32oka3uibrs73a1qk0g-a.oregon-postgres.render.com;Port=5432;Database=fcg_games_db;Username=usr_fcg;Password=RTfpEwPmwVkGMjF5ObSgpLbtfBhIDigG;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Maximum Pool Size=50"
+    "ServiceBus": {
+      "ConnectionString": "${SERVICEBUS_CONNECTION_STRING}",
+      "QueueName": "${SERVICEBUS_QUEUE_NAME}"
+    },
+    "Elastic": {
+      "CloudId": "${ELASTIC_CLOUDID}",
+      "ApiKeyId": "${ELASTIC_APIKEYID}",
+      "ApiKey": "${ELASTIC_APIKEY}",
+      "Index": "${ELASTIC_INDEX}",
+      "DisablePing": "${ELASTIC_DISABLEPING}"
+    },
+    "Postgres": "${POSTGRES_CONNECTION_STRING}"
   }
 }
