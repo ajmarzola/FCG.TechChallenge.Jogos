@@ -1,0 +1,24 @@
+﻿using FCG.TechChallenge.Jogos.Application.Abstractions;
+using FCG.TechChallenge.Jogos.Application.Common;
+using FCG.TechChallenge.Jogos.Application.DTOs;
+using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
+
+namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
+{
+    public sealed class JogosReadRepositoryElastic : IJogosReadRepository
+    {
+        private readonly JogoSearchQueries _q;
+
+        public JogosReadRepositoryElastic(JogoSearchQueries q) => _q = q;
+
+        public async Task<Paged<JogoDto>> SearchAsync(string? termo, int page, int pageSize, CancellationToken ct)
+        {
+            var res = await _q.SearchAsync(
+                termo: termo, page: page, pageSize: pageSize,
+                categoria: null, precoMin: null, precoMax: null, sort: null, ct: ct);
+
+            // mapeia para Paged<JogoDto> (facets ficam de fora por enquanto)
+            return new Paged<JogoDto>(res.Items.ToList(), res.Total, res.Page, res.PageSize);
+        }
+    }
+}
