@@ -1,49 +1,50 @@
-﻿using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
-
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Elastic.Clients.Elasticsearch;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
-using Nest;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
+using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Elastic
 {
-    public sealed class ElasticBootService(IElasticClient es, IOptions<ElasticOptions> opt, ILogger<ElasticBootService> log) : IHostedService
+    public sealed class ElasticBootService : IHostedService
     {
-        private readonly IElasticClient _es = es;
-        private readonly ILogger<ElasticBootService> _log = log;
-        private readonly string _index = (opt.Value.Index ?? "jogos").Trim().TrimEnd('}', '/', ' ');
+        private readonly ElasticsearchClient _es;
+        private readonly ILogger<ElasticBootService> _log;
+        private readonly string _index;
+
+        public ElasticBootService(
+            ElasticClientFactory factory,
+            IOptions<ElasticsearchOptions> opt,
+            ILogger<ElasticBootService> log)
+        {
+            _es = factory.Create();
+            _log = log;
+            _index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName.Trim().TrimEnd('}', '/', ' ');
+        }
 
         public async Task StartAsync(CancellationToken ct)
         {
-            var ping = await _es.PingAsync();
-            if (!ping.IsValid)
+            var ping = await _es.PingAsync(ct);
+            if (!ping.IsSuccess())
             {
                 _log.LogError("Elastic ping inválido: {info}", ping.DebugInformation);
                 throw new InvalidOperationException("Não foi possível pingar o Elasticsearch.");
             }
 
-            var exists = await _es.Indices.ExistsAsync(_index, ct: ct);
-            if (!exists.IsValid)
-            {
-                _log.LogWarning("Falha ao checar existência do índice: {info}", exists.DebugInformation);
-            }
-
+            var exists = await _es.Indices.ExistsAsync(_index, ct);
             if (!exists.Exists)
             {
-                var create = await _es.Indices.CreateAsync(_index, c => EsMappings.ConfigureIndex(c, _index), ct);
-                if (!create.IsValid)
+                // Definição do índice (v9). Se já tem EsIndexDefinition, use-a:
+                var req = EsIndexDefinition.Build(_index);
+                var create = await _es.Indices.CreateAsync(req, ct);
+                if (!create.IsValidResponse)
                 {
                     _log.LogError("Falha ao criar índice '{idx}': {info}", _index, create.DebugInformation);
                     throw new InvalidOperationException($"Falha ao criar índice '{_index}'.");
                 }
-
                 _log.LogInformation("Índice '{idx}' criado.", _index);
             }
             else

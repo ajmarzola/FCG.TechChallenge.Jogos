@@ -1,12 +1,9 @@
-﻿using Elasticsearch.Net;
-
-using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
-
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-
-using Nest;
+using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
+using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
+using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
+using FCG.TechChallenge.Jogos.Infrastructure.Elastic; // para o BootService (abaixo)
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Elastic
 {
@@ -14,40 +11,16 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.Elastic
     {
         public static IServiceCollection AddElasticSearch(this IServiceCollection services, IConfiguration cfg)
         {
-            services.Configure<ElasticOptions>(cfg.GetSection("Elastic"));
+            // Lê "Elasticsearch" (v9)
+            services.Configure<ElasticsearchOptions>(cfg.GetSection("Elasticsearch"));
 
-            services.AddSingleton<IElasticClient>(sp =>
-            {
-                var opt = sp.GetRequiredService<IOptions<ElasticOptions>>().Value;
+            // Cliente e helpers
+            services.AddSingleton<ElasticClientFactory>();
+            services.AddSingleton<JogoIndexer>();
+            services.AddSingleton<JogoSearchQueries>();
+            services.AddSingleton<RecommendationsQueries>();
 
-                if (string.IsNullOrWhiteSpace(opt.CloudId) ||
-                    string.IsNullOrWhiteSpace(opt.ApiKeyId) ||
-                    string.IsNullOrWhiteSpace(opt.ApiKey))
-                {
-                    throw new InvalidOperationException("Elastic Cloud requer CloudId, ApiKeyId e ApiKey.");
-                }
-
-                var index = (opt.Index ?? "jogos").Trim().TrimEnd('}', '/', ' ');
-
-                // Cloud-only: usa CloudId + ApiKey
-                var settings = new ConnectionSettings(
-                    cloudId: opt.CloudId,
-                    credentials: new ApiKeyAuthenticationCredentials(opt.ApiKeyId, opt.ApiKey))
-                    .DefaultIndex(index)
-                    .PrettyJson()
-                    .DisableDirectStreaming()   // facilita debugar (DebugInformation)
-                    .ThrowExceptions();
-
-                if (opt.DisablePing)
-                {
-                    settings = settings.DisablePing();
-                }
-
-                // CloudId usa CloudConnectionPool; sniffing já não é utilizado
-                return new ElasticClient(settings);
-            });
-
-            // sobe o hosted service que pinga e garante o índice
+            // Garante índice na subida
             services.AddHostedService<ElasticBootService>();
 
             return services;

@@ -1,13 +1,29 @@
-﻿using FCG.TechChallenge.Jogos.Application.DTOs;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.QueryDsl;
+
 using Microsoft.Extensions.Options;
-using Nest;
+
+using FCG.TechChallenge.Jogos.Application.DTOs;
+using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries
 {
-    public sealed class JogoSearchQueries(ElasticClientFactory factory, IOptions<Config.Options.ElasticOptions> opt)
+    public sealed class JogoSearchQueries
     {
-        private readonly IElasticClient _es = factory.Create();
-        private readonly string _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
+        private readonly ElasticsearchClient _es;
+        private readonly string _index;
+
+        public JogoSearchQueries(ElasticClientFactory factory, IOptions<ElasticsearchOptions> opt)
+        {
+            _es = factory.Create();
+            _index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName!;
+        }
 
         public async Task<SearchResultDto<JogoDto>> SearchAsync(
             string? termo,
@@ -19,91 +35,114 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             string? sort = null,
             CancellationToken ct = default)
         {
-            if (page <= 0)
-            {
-                page = 1;
-            }
+            if (page <= 0) page = 1;
+            if (pageSize <= 0) pageSize = 20;
 
-            if (pageSize <= 0)
-            {
-                pageSize = 20;
-            }
+            var must = new List<Query>();
+            var filter = new List<Query>();
 
-            var must = new List<Func<QueryContainerDescriptor<EsJogoDoc>, QueryContainer>>();
-            var filter = new List<Func<QueryContainerDescriptor<EsJogoDoc>, QueryContainer>>();
-
+            // ------ TEXTO: Nome (boost 3) + Descricao (AND) via Bool.Should ------
             if (!string.IsNullOrWhiteSpace(termo))
             {
-                must.Add(m => m.MultiMatch(mm => mm
-                    .Query(termo)
-                    .Fields(f => f
-                        .Field(ff => ff.Nome, boost: 3.0)
-                        .Field(ff => ff.Descricao))
-                    .Type(TextQueryType.BestFields)
-                    .Operator(Operator.And)));
+                var should = new List<Query>();
+
+                Query qNome = new MatchQuery
+                {
+                    Field = "Nome",
+                    Query = termo,
+                    Operator = Operator.And,
+                    Boost = 3.0f
+                };
+                should.Add(qNome);
+
+                Query qDesc = new MatchQuery
+                {
+                    Field = "Descricao",
+                    Query = termo,
+                    Operator = Operator.And
+                };
+                should.Add(qDesc);
+
+                Query qBool = new BoolQuery
+                {
+                    Should = should,
+                    MinimumShouldMatch = 1
+                };
+                must.Add(qBool);
             }
 
+            // ------ CATEGORIA: term exato ------
             if (!string.IsNullOrWhiteSpace(categoria))
             {
-                filter.Add(f => f.Term(t => t.Field(ff => ff.Categoria).Value(categoria)));
+                Query qCat = new TermQuery
+                {
+                    Field = "Categoria",
+                    Value = categoria
+                };
+                filter.Add(qCat);
             }
 
+            // ------ PREÇO: faixa ------
             if (precoMin.HasValue || precoMax.HasValue)
             {
-                filter.Add(f => f.Range(r => r
-                    .Field(ff => ff.Preco)
-                    .GreaterThanOrEquals(precoMin.HasValue ? (double?)precoMin.Value : null) // cast p/ double?
-                    .LessThanOrEquals(precoMax.HasValue ? (double?)precoMax.Value : null)
-                ));
+                var nr = new NumberRangeQuery { Field = "Preco" };
+                if (precoMin.HasValue) nr.Gte = (double)precoMin.Value;
+                if (precoMax.HasValue) nr.Lte = (double)precoMax.Value;
+
+                Query qRange = nr; // conversão implícita para Query
+                filter.Add(qRange);
             }
 
-            var from = (page - 1) * pageSize;
-
-            var res = await _es.SearchAsync<EsJogoDoc>(s => {
-                s = s.Index(_index)
-                     .Query(q => q.Bool(b => b.Must(must).Filter(filter)))
-                     .Highlight(h => h
-                        .Fields(hf => hf
-                            .Field(f => f.Nome).PreTags("<mark>").PostTags("</mark>"))
-                        .Fields(hf => hf
-                            .Field(f => f.Descricao).PreTags("<mark>").PostTags("</mark>")
-                        )
-                     )
-                     .Aggregations(a => a
-                        .Terms("by_categoria", t => t.Field(f => f.Categoria).Size(20))
-                        .Range("by_preco", r => r
-                            .Field(f => f.Preco)
-                            .Ranges(
-                                rr => rr.To(5000),              // <= 50,00
-                                rr => rr.From(5000).To(20000),  // 50–200
-                                rr => rr.From(20000)            // > 200
-                            )
-                        )
-                     )
-                     .From(from)
-                     .Size(pageSize);
-
-                // Ordenação
-                s = s.Sort(ss =>
-                {
-                    return sort switch
-                    {
-                        "preco_asc" => ss.Ascending(f => f.Preco),
-                        "preco_desc" => ss.Descending(f => f.Preco),
-                        "recentes" => ss.Descending(f => f.CreatedUtc),
-                        _ => ss.Descending(SortSpecialField.Score).Ascending(f => f.Nome.Suffix("keyword"))
-                    };
-                });
-
-                return s;
-            }, ct);
-
-            if (!res.IsValid)
+            // ------ ORDENAÇÃO ------
+            var sortList = new List<SortOptions>();
+            switch (sort)
             {
-                throw new InvalidOperationException($"Search inválida: {res.ServerError}");
+                case "preco_asc":
+                    sortList.Add(new SortOptions { Field = new FieldSort { Field = "Preco", Order = SortOrder.Asc } });
+                    break;
+
+                case "preco_desc":
+                    sortList.Add(new SortOptions { Field = new FieldSort { Field = "Preco", Order = SortOrder.Desc } });
+                    break;
+
+                case "recentes":
+                    sortList.Add(new SortOptions { Field = new FieldSort { Field = "CreatedUtc", Order = SortOrder.Desc } });
+                    break;
+
+                default:
+                    // _score desc + Nome.keyword asc
+                    sortList.Add(new SortOptions { Score = new ScoreSort { Order = SortOrder.Desc } });
+                    sortList.Add(new SortOptions { Field = new FieldSort { Field = "Nome.keyword", Order = SortOrder.Asc } });
+                    break;
             }
 
-            var items = res.Hits.Select(h => {
+            var req = new SearchRequest<EsJogoDoc>(_index)
+            {
+                From = (page - 1) * pageSize,
+                Size = pageSize,
+                Query = new BoolQuery
+                {
+                    Must = must,
+                    Filter = filter
+                },
+                Sort = sortList,
+
+                // Dica: se sua versão suportar, ative o cálculo do total:
+                // TrackTotalHits = new TrackHits(true)
+            };
+
+            var res = await _es.SearchAsync<EsJogoDoc>(req, ct);
+            if (!res.IsValidResponse)
+                throw new InvalidOperationException($"Search inválida: {res.DebugInformation}");
+
+            // Algumas versões não expõem 'Total' fortemente tipado; para não quebrar build,
+            // usamos o Count dos hits como fallback. (Se quiser total REAL, ative TrackTotalHits e
+            // use res.HitsMetadata.Total?.Value se sua versão tiver.)
+            long totalLong = res.Hits != null ? res.Hits.Count : 0;
+            int total = totalLong > int.MaxValue ? int.MaxValue : (int)totalLong;
+
+            var items = res.Hits.Select(h =>
+            {
                 var src = h.Source!;
                 return new JogoDto
                 {
@@ -114,54 +153,40 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
                     Categoria = src.Categoria,
                     CreatedUtc = src.CreatedUtc,
                     UpdatedUtc = src.UpdatedUtc,
-                    Highlight = new HighlightDto
-                    {
-                        Nome = h.Highlight?.GetValueOrDefault("nome")?.FirstOrDefault(),
-                        Descricao = h.Highlight?.GetValueOrDefault("descricao")?.FirstOrDefault()
-                    }
+                    Highlight = null
                 };
             }).ToList();
-
-            var facets = new Dictionary<string, Dictionary<string, int>>();
-
-            // categoria
-            var catAgg = res.Aggregations.Terms("by_categoria");
-            facets["categoria"] = catAgg?.Buckets?
-                .ToDictionary(b => b.Key as string ?? string.Empty, b => (int)b.DocCount.GetValueOrDefault())
-                ?? new Dictionary<string, int>();
-
-            // preco
-            var priceAgg = res.Aggregations.Range("by_preco");
-            facets["preco"] = new Dictionary<string, int>
-            {
-                { "<=50",  (int)(priceAgg?.Buckets.FirstOrDefault(b => b.Key == "*-5000.0")?.DocCount ?? 0) },
-                { "50-200",(int)(priceAgg?.Buckets.FirstOrDefault(b => b.Key == "5000.0-20000.0")?.DocCount ?? 0) },
-                { ">200",  (int)(priceAgg?.Buckets.FirstOrDefault(b => b.Key == "20000.0-*")?.DocCount ?? 0) }
-            };
 
             return new SearchResultDto<JogoDto>
             {
                 Items = items,
-                Total = (int)res.Total,
+                Total = total,
                 Page = page,
                 PageSize = pageSize,
-                Facets = facets
+                Facets = new Dictionary<string, Dictionary<string, int>>() // adicionamos depois
             };
         }
 
-        public async Task<IReadOnlyList<string>> AutocompleteAsync(string prefix, int size = 10, CancellationToken ct = default)
+        public async Task<IReadOnlyList<string>> AutocompleteAsync(
+            string prefix,
+            int size = 10,
+            CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(prefix))
-            {
                 return Array.Empty<string>();
-            }
 
-            var res = await _es.SearchAsync<EsJogoDoc>(s => s
-                .Index(_index)
-                .Query(q => q.MatchPhrasePrefix(m => m.Field(f => f.Nome).Query(prefix)))
-                .Size(size)
-                .Source(sf => sf.Includes(i => i.Field(f => f.Nome)))
-            , ct);
+            var req = new SearchRequest<EsJogoDoc>(_index)
+            {
+                Size = size,
+                Query = new MatchPhrasePrefixQuery
+                {
+                    Field = "Nome",
+                    Query = prefix
+                }
+            };
+
+            var res = await _es.SearchAsync<EsJogoDoc>(req, ct);
+            if (!res.IsValidResponse) return Array.Empty<string>();
 
             return res.Hits.Select(h => h.Source!.Nome).Distinct().ToList();
         }

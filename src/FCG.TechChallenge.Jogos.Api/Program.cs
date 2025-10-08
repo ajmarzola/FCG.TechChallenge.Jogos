@@ -18,6 +18,8 @@ using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
 using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
+using Microsoft.Extensions.Options;
+using Elastic.Clients.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,92 +81,67 @@ app.MapJogoQueries();
 // ---------- HEALTH: Elastic ----------
 app.MapGet("/health/es", async (
     ElasticClientFactory factory,
-    IOptions<ElasticOptions> opt,
-    JogoIndexer indexer,
-    CancellationToken ct) =>
+    IOptions<ElasticsearchOptions> opt,
+    JogoIndexer indexer) =>
 {
     var es = factory.Create();
-    var index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
+    var index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName!;
 
-    // Ping
-    var ping = await es.PingAsync();
-    if (!ping.IsValid)
-    {
-        return Results.Problem($"Ping inválido: {ping.OriginalException?.Message ?? ping.ServerError?.ToString()}");
-    }
-
-    // Garante índice (aqui sim usamos ct)
-    try { await indexer.EnsureIndexAsync(ct); }
+    try { await indexer.EnsureIndexAsync(CancellationToken.None); }
     catch (Exception ex) { return Results.Problem($"Falha ao garantir índice '{index}': {ex.Message}"); }
 
-    // Health do cluster (geral) — sem ct
-    var clusterHealth = await es.Cluster.HealthAsync();
-
-    // Health do índice específico — passe o nome do índice, sem lambda e sem ct
-    var idxHealth = await es.Cluster.HealthAsync(index);
+    // ✅ versão simples e estável
+    var cluster = await es.Cluster.HealthAsync(CancellationToken.None);
+    var idxExists = await es.Indices.ExistsAsync(index, CancellationToken.None);
 
     return Results.Ok(new
     {
-        ping = ping.IsValid,
-        cluster = clusterHealth?.ClusterName,
-        clusterStatus = clusterHealth?.Status.ToString(),
-        nodes = clusterHealth?.NumberOfNodes,
+        cluster = cluster.ClusterName,
+        clusterStatus = cluster.Status.ToString(),
+        nodes = cluster.NumberOfNodes,
         index,
-        indexStatus = idxHealth?.Status.ToString()
+        indexExists = idxExists.Exists
     });
 })
 .WithName("ElasticHealth")
-.WithTags("Health")
-.Produces(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status500InternalServerError);
+.WithTags("Health");
 
-// ---------- ELASTIC SMOKE (INDEX -> GET -> DELETE) ----------
 app.MapPost("/health/es/smoke", async (
     ElasticClientFactory factory,
-    IOptions<ElasticOptions> opt,
-    JogoIndexer indexer,
-    CancellationToken ct) =>
+    IOptions<ElasticsearchOptions> opt,
+    JogoIndexer indexer) =>
 {
     var es = factory.Create();
-    var index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
+    var index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName!;
     var id = Guid.NewGuid().ToString("N");
 
-    await indexer.EnsureIndexAsync(ct);
+    await indexer.EnsureIndexAsync(CancellationToken.None);
 
-    // INDEX
-    var indexResp = await es.IndexAsync(new
+    // indexa
+    var indexResp = await es.IndexAsync(new EsJogoDoc
     {
-        id,
-        nome = "smoke-test",
-        preco = 1.23m,
-        createdUtc = DateTime.UtcNow
-    }, i => i.Index(index).Id(id));
+        Id = id,
+        Nome = "smoke-test",
+        NomeSuggest = "smoke-test",
+        Preco = 1.23m,
+        CreatedUtc = DateTime.UtcNow
+    }, CancellationToken.None);
+    if (!indexResp.IsValidResponse) return Results.Problem($"Index falhou: {indexResp.DebugInformation}");
 
-    if (!indexResp.IsValid)
-    {
-        return Results.Problem($"Index falhou: {indexResp.OriginalException?.Message ?? indexResp.ServerError?.ToString()}");
-    }
+    // get
+    var getResp = await es.GetAsync<EsJogoDoc>(id, CancellationToken.None);
+    if (!getResp.Found) return Results.Problem("Get não encontrou o documento.");
 
-    // GET
-    var getResp = await es.GetAsync<dynamic>(id, g => g.Index(index));
-    if (!getResp.Found)
-    {
-        return Results.Problem("Get não encontrou o documento indexado.");
-    }
-
-    // DELETE
-    var delResp = await es.DeleteAsync<dynamic>(id, d => d.Index(index));
-    if (!delResp.IsValid)
-    {
-        return Results.Problem($"Delete falhou: {delResp.OriginalException?.Message ?? delResp.ServerError?.ToString()}");
-    }
+    // delete
+    var delResp = await es.DeleteAsync<EsJogoDoc>(id, CancellationToken.None);
+    if (!delResp.IsValidResponse) return Results.Problem($"Delete falhou: {delResp.DebugInformation}");
 
     return Results.Ok(new { ok = true, index, id });
 })
 .WithName("ElasticSmoke")
-.WithTags("Health")
-.Produces(StatusCodes.Status200OK)
-.Produces(StatusCodes.Status500InternalServerError);
+.WithTags("Health");
+//.Produces(StatusCodes.Status200OK)
+//.Produces(StatusCodes.Status500InternalServerError);
 
 
 

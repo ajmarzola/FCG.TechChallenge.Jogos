@@ -3,75 +3,50 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Nest;
+using Elastic.Clients.Elasticsearch;
+using Elastic.Clients.Elasticsearch.Core.Bulk;
+using Elastic.Clients.Elasticsearch.IndexManagement;
 using Microsoft.Extensions.Options;
-using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
-using Elasticsearch.Net;
+using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
 {
-    public sealed class JogoIndexer(ElasticClientFactory factory, IOptions<ElasticOptions> opt)
+    public sealed class JogoIndexer
     {
-        private readonly IElasticClient _es = factory.Create();
-        private readonly string _index = string.IsNullOrWhiteSpace(opt.Value.Index) ? "jogos" : opt.Value.Index!;
+        private readonly ElasticsearchClient _es;
+        private readonly string _index;
+
+        // Options: Uri, ApiKey (base64), IndexName
+        public JogoIndexer(ElasticClientFactory factory, IOptions<ElasticsearchOptions> opt)
+        {
+            _es = factory.Create();
+            _index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName!;
+        }
 
         public async Task EnsureIndexAsync(CancellationToken ct)
         {
-            // 0) Ping – se isso falhar, é rede/auth
-            var ping = await _es.PingAsync();
+            var exists = await _es.Indices.ExistsAsync(_index, ct);
+            if (exists.Exists) return;
 
-            if (!ping.IsValid)
+            // ❌ antes: NEST/NULO
+            // var create = await _es.Indices.CreateAsync(new CreateIndexRequest(_index), ct);
+
+            // ✅ agora: usa a definição v9 com analyzers/mappings
+            var createReq = EsIndexDefinition.Build(_index);
+            var create = await _es.Indices.CreateAsync(createReq, ct);
+
+            if (!create.IsValidResponse)
             {
-                throw new InvalidOperationException($"Elastic ping falhou: {ping.OriginalException?.Message ?? ping.ServerError?.ToString()}\n{ping.DebugInformation}");
+                var reason = create.ElasticsearchServerError?.Error?.Reason ?? "sem detalhe";
+                throw new InvalidOperationException($"Falha ao criar índice '{_index}': {reason}\n{create.DebugInformation}");
             }
-
-            // 1) Já existe?
-            var exists = await _es.Indices.ExistsAsync(_index);
-            if (exists.Exists)
-            {
-                return;
-            }
-
-            // 2) Tenta criar com seu mapping
-            var create = await _es.Indices.CreateAsync(_index, c => EsMappings.ConfigureIndex(c, _index));
-            if (!create.IsValid)
-            {
-                throw new InvalidOperationException(
-                    $"Falha ao criar índice '{_index}': " +
-                    (create.ServerError?.Error?.Reason ?? create.OriginalException?.Message ?? "sem detalhe")
-                    + Environment.NewLine + create.DebugInformation);
-            }
-
-            // 3) Tenta fallback "mínimo" p/ isolar problema de analyzer/mapping
-            var fallback = await _es.Indices.CreateAsync(_index, c => c.Map<EsJogoDoc>(m => m.AutoMap()));
-            if (fallback.IsValid)
-            {
-                return;
-            }
-
-            // 4) Usa LOW-LEVEL pra capturar status & body exatos
-            var low = await _es.LowLevel.Indices.CreateAsync<StringResponse>(
-                _index,
-                PostData.String("{}")  // body vazio/mínimo
-            );
-
-            var statusHi = create.ApiCall?.HttpStatusCode?.ToString() ?? "sem-status";
-            var statusLo = low.HttpStatusCode?.ToString() ?? "sem-status";
-            var reasonHi = create.OriginalException?.Message
-                         ?? create.ServerError?.Error?.Reason
-                         ?? "sem motivo (high level)";
-            var bodyLo = low.Body ?? "(sem body)";
-
-            throw new InvalidOperationException(
-                $"Falha ao criar índice '{_index}'. " +
-                $"HiStatus={statusHi}, HiReason={reasonHi} | " +
-                $"LoStatus={statusLo}, LoBody={bodyLo}\n" +
-                $"{create.DebugInformation}"
-            );
         }
 
-        public Task IndexAsync(Guid id, string nome, string? descricao, decimal preco, string? categoria, DateTime createdUtc, DateTime? updatedUtc, CancellationToken ct)
+
+        public Task IndexAsync(
+            Guid id, string nome, string? descricao, decimal preco, string? categoria,
+            DateTime createdUtc, DateTime? updatedUtc, CancellationToken ct)
         {
             var doc = new EsJogoDoc
             {
@@ -85,24 +60,28 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
                 UpdatedUtc = updatedUtc
             };
 
-            return _es.IndexAsync(doc, i => i.Index(_index).Id(doc.Id), ct);
+            // v9 usa DefaultIndex configurado no factory
+            return _es.IndexAsync(doc, ct);
         }
 
         public Task PartialUpdatePrecoAsync(Guid id, decimal novoPreco, CancellationToken ct)
-            => _es.UpdateAsync<EsJogoDoc, object>(
-                id.ToString("N"),
-                u => u.Index(_index).Doc(new { Preco = novoPreco }),
-                ct
-            );
+        {
+            var req = new UpdateRequest<EsJogoDoc, object>(_index, id.ToString("N")) { Doc = new { Preco = novoPreco } };
+            return _es.UpdateAsync(req, ct);
+        }
 
         public Task DeleteAsync(Guid id, CancellationToken ct)
-            => _es.DeleteAsync<EsJogoDoc>(id.ToString("N"), d => d.Index(_index), ct);
+            => _es.DeleteAsync<EsJogoDoc>(id.ToString("N"), ct);
 
-        public Task DeleteAllAsync(CancellationToken ct)
-            => _es.DeleteByQueryAsync<EsJogoDoc>(q => q
-                    .Index(_index)
-                    .Query(qq => qq.MatchAll()),
-                ct);
+        // Mais simples e robusto: dropa e recria (ao invés de DeleteByQuery)
+        public async Task DeleteAllAsync(CancellationToken ct)
+        {
+            var del = await _es.Indices.DeleteAsync(_index, ct);
+            if (!del.IsValidResponse)
+                throw new InvalidOperationException($"Falha ao deletar índice '{_index}': {del.DebugInformation}");
+
+            await EnsureIndexAsync(ct);
+        }
 
         public async Task BulkIndexAsync(IEnumerable<JogoRead> jogos, CancellationToken ct)
         {
@@ -118,37 +97,35 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
                 UpdatedUtc = j.UpdatedUtc
             });
 
-            var response = await _es.BulkAsync(b =>
-            {
-                b.Index(_index);
-                foreach (var d in docs)
-                {
-                    b.Index<EsJogoDoc>(bi => bi.Document(d).Id(d.Id));
-                }
+            // v9: use uma lista de IBulkOperation
+            var ops = new List<IBulkOperation>();
+            foreach (var d in docs)
+                ops.Add(new BulkIndexOperation<EsJogoDoc>(d) { Id = d.Id });
 
-                return b;
-            }, ct);
+            var req = new BulkRequest(_index) { Operations = ops };
+            var resp = await _es.BulkAsync(req, ct);
 
-            if (response.Errors)
+            if (!resp.IsValidResponse || resp.Errors)
             {
-                var errors = string.Join(" | ", response.ItemsWithErrors.Select(e => $"{e.Id}:{e.Error?.Reason}"));
-                throw new InvalidOperationException($"BulkIndex com erros: {errors}");
+                var errors = string.Join(" | ", resp.ItemsWithErrors.Select(e => $"{e.Id}:{e.Error?.Reason}"));
+                throw new InvalidOperationException($"BulkIndex com erros: {errors}\n{resp.DebugInformation}");
             }
 
-            await _es.Indices.RefreshAsync(_index, r => r, ct);
+            _ = await _es.Indices.RefreshAsync(_index, ct);
         }
 
         public async Task RebuildIndexAsync(ReadModelDbContext db, CancellationToken ct)
         {
-            var exists = await _es.Indices.ExistsAsync(_index, d => d, ct);
+            var exists = await _es.Indices.ExistsAsync(_index, ct);
             if (exists.Exists)
             {
-                await _es.Indices.DeleteAsync(_index, d => d, ct);
+                var del = await _es.Indices.DeleteAsync(_index, ct);
+                if (!del.IsValidResponse)
+                    throw new InvalidOperationException($"Falha ao deletar índice '{_index}': {del.DebugInformation}");
             }
 
             await EnsureIndexAsync(ct);
-
-            var all = db.Jogos.AsQueryable().ToList(); // para volumes grandes, pagine
+            var all = db.Jogos.AsQueryable().ToList();
             await BulkIndexAsync(all, ct);
         }
     }
