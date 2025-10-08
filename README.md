@@ -1,6 +1,6 @@
 # FCG.TechChallenge.Jogos
 
-> Microsserviço de **Jogos** da plataforma **FIAP Cloud Games (FCG)** — evolução do MVP do repositório **Grupo49-TechChallenge**, agora separado em **microsserviços** e com **busca avançada via Elasticsearch**, **processos assíncronos** e **observabilidade**. Este serviço cuida do **catálogo**, **busca**, **biblioteca do usuário** e **compra** de jogos, integrando-se a **Usuários** (autenticação) e **Pagamentos** (intents/status). fileciteturn2file0L18-L34
+> Microsserviço de **Jogos** da plataforma **FIAP Cloud Games (FCG)** — evolução do MVP do repositório **Grupo49-TechChallenge**, agora separado em **microsserviços** e com **busca avançada via Elasticsearch**, **processos assíncronos** e **observabilidade**. Este serviço cuida do **catálogo**, **busca**, **biblioteca do usuário** e **compra** de jogos, integrando-se a **Usuários** (autenticação) e **Pagamentos** (intents/status).
 
 - **Usuarios** (auth/identidade): https://github.com/ajmarzola/FCG.TechChallenge.Usuarios  
 - **Pagamentos** (intents/status): https://github.com/ajmarzola/FCG.TechChallenge.Pagamentos  
@@ -35,21 +35,21 @@ https://github.com/ajmarzola/Grupo49-TechChallenge
 
 ## Visão Geral
 
-O **FCG.TechChallenge.Jogos** provê APIs REST para **CRUD de jogos**, **busca** (com **Elasticsearch**), **compra** e **consulta de biblioteca**. Ele publica e consome **eventos** para manter o índice de busca atualizado e coordenar a jornada de compra com o serviço de **Pagamentos** por meio de **filas/tópicos**. fileciteturn2file1L20-L39
+O **FCG.TechChallenge.Jogos** provê APIs REST para **CRUD de jogos**, **busca** (com **Elasticsearch**), **compra** e **consulta de biblioteca**. Ele publica e consome **eventos** para manter o índice de busca atualizado e coordenar a jornada de compra com o serviço de **Pagamentos** por meio de **filas/tópicos**.
 
-Os requisitos da fase incluem: separar em três microsserviços (**Usuários, Jogos, Pagamentos**), indexar dados no **Elasticsearch** com consultas/agragações avançadas, usar **funcões serverless** para tarefas assíncronas e melhorar **observabilidade** (logs/traces). fileciteturn2file0L34-L63
+Os requisitos da fase incluem: separar em três microsserviços (**Usuários, Jogos, Pagamentos**), indexar dados no **Elasticsearch** com consultas/agragações avançadas, usar **funcões serverless** para tarefas assíncronas e melhorar **observabilidade** (logs/traces).
 
 ---
 
 ## Arquitetura
 
 - **API Jogos** (ASP.NET Core) — catálogo, compra, biblioteca.
-- **Read Model + Índice** — **Elasticsearch** para busca rápida; indexer assíncrono atualiza o índice a partir de eventos. fileciteturn2file1L41-L56
+- **Read Model + Índice** — **Elasticsearch** para busca rápida; indexer assíncrono atualiza o índice a partir de eventos.
 - **Write Model** — banco relacional (PostgreSQL/SQL Server) para persistência transacional.
-- **Mensageria** — barramento/filas para propagar eventos e processar compra/pagamentos de forma **assíncrona**; DLQ para falhas. fileciteturn2file1L58-L88
-- **Serverless** — **Azure Functions** para indexação e orquestrações (ex.: atualização do índice, handlers de eventos). fileciteturn2file0L52-L63
+- **Mensageria** — barramento/filas para propagar eventos e processar compra/pagamentos de forma **assíncrona**; DLQ para falhas.
+- **Serverless** — **Azure Functions** para indexação e orquestrações (ex.: atualização do índice, handlers de eventos).
 
-> O **API Gateway** (com **JWT**) orquestra o tráfego e a autenticação, roteando o front-end para as APIs de Usuários, Jogos e Pagamentos. fileciteturn2file1L6-L18
+> O **API Gateway** (com **JWT**) orquestra o tráfego e a autenticação, roteando o front-end para as APIs de Usuários, Jogos e Pagamentos.
 
 ---
 
@@ -185,7 +185,7 @@ curl -X PUT http://localhost:9200/fcg-games \
       }'
 ```
 
-> Em **produção**, crie o índice via *bootstrap* do próprio serviço ou *pipeline* IaC. As buscas avançadas/agragações são requisitos desta fase. fileciteturn2file0L63-L75
+> Em **produção**, crie o índice via *bootstrap* do próprio serviço ou *pipeline* IaC. As buscas avançadas/agragações são requisitos desta fase.
 
 ---
 
@@ -264,7 +264,7 @@ FCG.TechChallenge.Jogos/
 - **Secrets** por ambiente (ex.: `ELASTIC__APIKEY`, `CONNECTIONSTRINGS__DEFAULT`, `SERVICEBUS__CONNECTIONSTRING`).  
 - *Infra as Code* opcional para Elasticsearch e Service Bus.
 
-> Os entregáveis da fase pedem **README completo**, desenho/fluxo de arquitetura e **pipelines**; o deploy serverless é recomendado. fileciteturn2file0L94-L126
+> Os entregáveis da fase pedem **README completo**, desenho/fluxo de arquitetura e **pipelines**; o deploy serverless é recomendado.
 
 ---
 
