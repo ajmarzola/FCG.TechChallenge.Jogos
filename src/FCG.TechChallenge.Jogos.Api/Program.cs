@@ -1,14 +1,8 @@
-using System;
-using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
-
-using FCG.TechChallenge.Jogos.Api.CompositionRoot;
 using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
 using FCG.TechChallenge.Jogos.Application.Abstractions;
-
-using FCG.TechChallenge.Jogos.Infrastructure;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
@@ -18,8 +12,6 @@ using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
 using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
-using Microsoft.Extensions.Options;
-using Elastic.Clients.Elasticsearch;
 
 var builder = WebApplication.CreateBuilder(args);
 

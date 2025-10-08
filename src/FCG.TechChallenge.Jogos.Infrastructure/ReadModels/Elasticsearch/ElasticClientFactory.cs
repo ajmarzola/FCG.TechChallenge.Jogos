@@ -1,5 +1,4 @@
-﻿using System;
-using Elastic.Clients.Elasticsearch;
+﻿using Elastic.Clients.Elasticsearch;
 using Elastic.Transport;
 using Microsoft.Extensions.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;

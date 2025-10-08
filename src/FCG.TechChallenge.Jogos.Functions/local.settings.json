@@ -7,12 +7,10 @@
       "ConnectionString": "${SERVICEBUS_CONNECTION_STRING}",
       "QueueName": "${SERVICEBUS_QUEUE_NAME}"
     },
-    "Elastic": {
-      "CloudId": "${ELASTIC_CLOUDID}",
-      "ApiKeyId": "${ELASTIC_APIKEYID}",
-      "ApiKey": "${ELASTIC_APIKEY}",
-      "Index": "${ELASTIC_INDEX}",
-      "DisablePing": "${ELASTIC_DISABLEPING}"
+    "Elasticsearch": {
+      "Uri": "${ELASTICSEARCH_URI}",
+      "ApiKey": "${ELASTICSEARCH_APIKEY}",
+      "IndexName": "${ELASTICSEARCH_INDEXNAME}"
     },
     "Postgres": "${POSTGRES_CONNECTION_STRING}"
   }

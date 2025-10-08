@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FCG.TechChallenge.Jogos.Infrastructure.Config.Options
+﻿namespace FCG.TechChallenge.Jogos.Infrastructure.Config.Options
 {
     public sealed class ElasticsearchOptions
     {

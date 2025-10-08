@@ -4,7 +4,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.DependencyInjection; // <-- IMPORTANTE
-using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Outbox
 {

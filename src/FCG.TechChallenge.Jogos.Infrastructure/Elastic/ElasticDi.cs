@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
-using FCG.TechChallenge.Jogos.Infrastructure.Elastic; // para o BootService (abaixo)
 
 namespace FCG.TechChallenge.Jogos.Infrastructure.Elastic
 {
