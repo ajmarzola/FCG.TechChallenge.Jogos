@@ -29,8 +29,15 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             string? sort = null,
             CancellationToken ct = default)
         {
-            if (page <= 0) page = 1;
-            if (pageSize <= 0) pageSize = 20;
+            if (page <= 0)
+            {
+                page = 1;
+            }
+
+            if (pageSize <= 0)
+            {
+                pageSize = 20;
+            }
 
             var must = new List<Query>();
             var filter = new List<Query>();
@@ -80,8 +87,15 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             if (precoMin.HasValue || precoMax.HasValue)
             {
                 var nr = new NumberRangeQuery { Field = "Preco" };
-                if (precoMin.HasValue) nr.Gte = (double)precoMin.Value;
-                if (precoMax.HasValue) nr.Lte = (double)precoMax.Value;
+                if (precoMin.HasValue)
+                {
+                    nr.Gte = (double)precoMin.Value;
+                }
+
+                if (precoMax.HasValue)
+                {
+                    nr.Lte = (double)precoMax.Value;
+                }
 
                 Query qRange = nr; // conversão implícita para Query
                 filter.Add(qRange);
@@ -127,7 +141,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
 
             var res = await _es.SearchAsync<EsJogoDoc>(req, ct);
             if (!res.IsValidResponse)
+            {
                 throw new InvalidOperationException($"Search inválida: {res.DebugInformation}");
+            }
 
             // Algumas versões não expõem 'Total' fortemente tipado; para não quebrar build,
             // usamos o Count dos hits como fallback. (Se quiser total REAL, ative TrackTotalHits e
@@ -167,7 +183,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             CancellationToken ct = default)
         {
             if (string.IsNullOrWhiteSpace(prefix))
+            {
                 return Array.Empty<string>();
+            }
 
             var req = new SearchRequest<EsJogoDoc>(_index)
             {
@@ -180,7 +198,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
             };
 
             var res = await _es.SearchAsync<EsJogoDoc>(req, ct);
-            if (!res.IsValidResponse) return Array.Empty<string>();
+            if (!res.IsValidResponse)
+            {
+                return Array.Empty<string>();
+            }
 
             return res.Hits.Select(h => h.Source!.Nome).Distinct().ToList();
         }

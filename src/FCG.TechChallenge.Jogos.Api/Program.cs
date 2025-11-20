@@ -12,27 +12,25 @@ using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
 using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
+using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var cs = builder.Configuration.GetConnectionString("Postgres")
-         ?? builder.Configuration["ConnectionStrings:Postgres"];
+builder.Services.AddHealthChecks();
+
+var cs = builder.Configuration.GetConnectionString("Postgres") ?? builder.Configuration["ConnectionStrings:Postgres"];
+
 if (string.IsNullOrWhiteSpace(cs))
 {
     throw new InvalidOperationException("ConnectionStrings:Postgres vazio/ausente.");
 }
 
-var serviceBus = builder.Configuration.GetSection("ServiceBus")
-               ?? throw new InvalidOperationException("ServiceBus não configurado.");
+var serviceBus = builder.Configuration.GetSection("ServiceBus") ?? throw new InvalidOperationException("ServiceBus não configurado.");
 
 // ---------- DB ----------
-builder.Services.AddDbContext<EventStoreDbContext>(opt =>
-    opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public"))
-       .UseSnakeCaseNamingConvention());
+builder.Services.AddDbContext<EventStoreDbContext>(opt => opt.UseNpgsql(cs, npg => npg.MigrationsHistoryTable("__EFMigrationsHistory", "public")).UseSnakeCaseNamingConvention());
 
-builder.Services.AddDbContext<ReadModelDbContext>(opt =>
-    opt.UseNpgsql(cs, x => x.MigrationsHistoryTable("__EFMigrationsHistory_Read", "public"))
-       .UseSnakeCaseNamingConvention()); // <-- mantemos só UMA vez
+builder.Services.AddDbContext<ReadModelDbContext>(opt => opt.UseNpgsql(cs, x => x.MigrationsHistoryTable("__EFMigrationsHistory_Read", "public")).UseSnakeCaseNamingConvention()); // <-- mantemos só UMA vez
 
 // ---------- OPTIONS ----------
 builder.Services.Configure<SqlOptions>(o => o.ConnectionString = cs);
@@ -57,6 +55,14 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// endpoints de health
+app.MapHealthChecks("/health/live");
+app.MapHealthChecks("/health/ready");
+
+// Middleware Prometheus (expõe /metrics)
+app.UseHttpMetrics();          // métricas de request/latência
+app.MapMetrics("/metrics");    // endpoint padrão Prometheus
+
 // ---------- SWAGGER UI ----------
 if (app.Environment.IsDevelopment())
 {
@@ -71,16 +77,19 @@ app.MapJogoCommands();
 app.MapJogoQueries();
 
 // ---------- HEALTH: Elastic ----------
-app.MapGet("/health/es", async (
-    ElasticClientFactory factory,
-    IOptions<ElasticsearchOptions> opt,
-    JogoIndexer indexer) =>
+app.MapGet("/health/es", async (ElasticClientFactory factory, IOptions<ElasticsearchOptions> opt, JogoIndexer indexer) =>
 {
     var es = factory.Create();
     var index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName!;
 
-    try { await indexer.EnsureIndexAsync(CancellationToken.None); }
-    catch (Exception ex) { return Results.Problem($"Falha ao garantir índice '{index}': {ex.Message}"); }
+    try
+    {
+        await indexer.EnsureIndexAsync(CancellationToken.None);
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem($"Falha ao garantir índice '{index}': {ex.Message}");
+    }
 
     // ✅ versão simples e estável
     var cluster = await es.Cluster.HealthAsync(CancellationToken.None);
@@ -94,14 +103,9 @@ app.MapGet("/health/es", async (
         index,
         indexExists = idxExists.Exists
     });
-})
-.WithName("ElasticHealth")
-.WithTags("Health");
+}).WithName("ElasticHealth").WithTags("Health");
 
-app.MapPost("/health/es/smoke", async (
-    ElasticClientFactory factory,
-    IOptions<ElasticsearchOptions> opt,
-    JogoIndexer indexer) =>
+app.MapPost("/health/es/smoke", async (ElasticClientFactory factory, IOptions<ElasticsearchOptions> opt, JogoIndexer indexer) =>
 {
     var es = factory.Create();
     var index = string.IsNullOrWhiteSpace(opt.Value.IndexName) ? "jogos" : opt.Value.IndexName!;
@@ -118,22 +122,32 @@ app.MapPost("/health/es/smoke", async (
         Preco = 1.23m,
         CreatedUtc = DateTime.UtcNow
     }, CancellationToken.None);
-    if (!indexResp.IsValidResponse) return Results.Problem($"Index falhou: {indexResp.DebugInformation}");
+
+    if (!indexResp.IsValidResponse)
+    {
+        return Results.Problem($"Index falhou: {indexResp.DebugInformation}");
+    }
 
     // get
     var getResp = await es.GetAsync<EsJogoDoc>(id, CancellationToken.None);
-    if (!getResp.Found) return Results.Problem("Get não encontrou o documento.");
+
+    if (!getResp.Found)
+    {
+        return Results.Problem("Get não encontrou o documento.");
+    }
 
     // delete
     var delResp = await es.DeleteAsync<EsJogoDoc>(id, CancellationToken.None);
-    if (!delResp.IsValidResponse) return Results.Problem($"Delete falhou: {delResp.DebugInformation}");
+
+    if (!delResp.IsValidResponse)
+    {
+        return Results.Problem($"Delete falhou: {delResp.DebugInformation}");
+    }
 
     return Results.Ok(new { ok = true, index, id });
-})
-.WithName("ElasticSmoke")
-.WithTags("Health");
-//.Produces(StatusCodes.Status200OK)
-//.Produces(StatusCodes.Status500InternalServerError);
+}).WithName("ElasticSmoke").WithTags("Health");
+
+app.MapGet("/", () => "OK");
 
 
 

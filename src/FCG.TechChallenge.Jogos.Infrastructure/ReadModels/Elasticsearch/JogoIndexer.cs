@@ -21,7 +21,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
         public async Task EnsureIndexAsync(CancellationToken ct)
         {
             var exists = await _es.Indices.ExistsAsync(_index, ct);
-            if (exists.Exists) return;
+            if (exists.Exists)
+            {
+                return;
+            }
 
             // ❌ antes: NEST/NULO
             // var create = await _es.Indices.CreateAsync(new CreateIndexRequest(_index), ct);
@@ -72,7 +75,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
         {
             var del = await _es.Indices.DeleteAsync(_index, ct);
             if (!del.IsValidResponse)
+            {
                 throw new InvalidOperationException($"Falha ao deletar índice '{_index}': {del.DebugInformation}");
+            }
 
             await EnsureIndexAsync(ct);
         }
@@ -94,7 +99,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
             // v9: use uma lista de IBulkOperation
             var ops = new List<IBulkOperation>();
             foreach (var d in docs)
+            {
                 ops.Add(new BulkIndexOperation<EsJogoDoc>(d) { Id = d.Id });
+            }
 
             var req = new BulkRequest(_index) { Operations = ops };
             var resp = await _es.BulkAsync(req, ct);
@@ -115,7 +122,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
             {
                 var del = await _es.Indices.DeleteAsync(_index, ct);
                 if (!del.IsValidResponse)
+                {
                     throw new InvalidOperationException($"Falha ao deletar índice '{_index}': {del.DebugInformation}");
+                }
             }
 
             await EnsureIndexAsync(ct);

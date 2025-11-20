@@ -22,12 +22,17 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
 
             // pega o doc semente
             var get = await _es.GetAsync<EsJogoDoc>(new GetRequest(_index, id), ct);
-            if (!get.Found || get.Source is null) return Array.Empty<EsJogoDoc>();
+            if (!get.Found || get.Source is null)
+            {
+                return Array.Empty<EsJogoDoc>();
+            }
 
             var seed = string.Join(' ', new[] { get.Source.Nome, get.Source.Descricao }
                                         .Where(s => !string.IsNullOrWhiteSpace(s)));
             if (string.IsNullOrWhiteSpace(seed))
+            {
                 return await FromSameCategoryAsync(jogoId, get.Source.Categoria, size, ct);
+            }
 
             // v9: use os tipos concretos; nada de new Query(...) nem new Fields(...)
             var req = new SearchRequest<EsJogoDoc>(_index)
@@ -58,7 +63,11 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Querie
 
         public async Task<IReadOnlyList<EsJogoDoc>> FromSameCategoryAsync(Guid jogoId, string? categoria, int size = 10, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(categoria)) return Array.Empty<EsJogoDoc>();
+            if (string.IsNullOrWhiteSpace(categoria))
+            {
+                return Array.Empty<EsJogoDoc>();
+            }
+
             var id = jogoId.ToString("N");
 
             var req = new SearchRequest<EsJogoDoc>(_index)

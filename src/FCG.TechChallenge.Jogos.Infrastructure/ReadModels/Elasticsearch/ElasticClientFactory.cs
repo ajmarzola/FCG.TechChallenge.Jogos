@@ -19,7 +19,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch
                 .EnableDebugMode();
 
             if (!string.IsNullOrWhiteSpace(o.ApiKey))
+            {
                 settings = settings.Authentication(new Base64ApiKey(o.ApiKey)); // API key do Elastic Cloud (base64)
+            }
 
             _client = new ElasticsearchClient(settings);
         }
