@@ -65,7 +65,7 @@ Os requisitos da fase incluem: separar em três microsserviços (**Usuários, Jo
 ---
 
 ## Monitoramento
-- Instalação do stack de monitoramento via Helm — ver [values-monitoring.yaml](https://github.com/ajmarzola/Grupo49-TechChallenge/blob/main/infra/monitoring/values-monitoring.yaml)
+- Instalação do stack de monitoramento via Helm — ver [infra](https://github.com/ajmarzola/Grupo49-TechChallenge/blob/main/infra/)
 
 ---
 
