@@ -1,9 +1,7 @@
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Npgsql;
 using FCG.TechChallenge.Jogos.Api.Endpoints.Jogos;
 using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
+using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
 using FCG.TechChallenge.Jogos.Infrastructure.Outbox;
@@ -11,7 +9,10 @@ using FCG.TechChallenge.Jogos.Infrastructure.Persistence.EventStore;
 using FCG.TechChallenge.Jogos.Infrastructure.Persistence.ReadModel;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Elasticsearch.Queries;
-using FCG.TechChallenge.Jogos.Infrastructure.Elastic;
+using FCG.TechChallenge.Jogos.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Npgsql;
 using Prometheus;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,7 +53,16 @@ FCG.TechChallenge.Jogos.Api.CompositionRoot.DependencyInjection.AddApplication(b
 // ---------- SWAGGER ----------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+// CONFIGURAÇÃO DA INTEGRAÇÃO
+// Aqui dizemos: "Sempre que alguém pedir IPagamentoIntegrationService, 
+// crie um PagamentoIntegrationService e use este endereço base."
+builder.Services.AddHttpClient<IPagamentoIntegrationService, PagamentoIntegrationService>(client =>
+{
+    // IMPORTANTE: Esta URL deve ser onde o SEU projeto de Pagamentos está rodando.
+    // Se for Docker, geralmente é o nome do container: http://pagamentos-api
+    // Se for rodando local no Visual Studio, pode ser algo como http://localhost:5002
+    client.BaseAddress = new Uri("http://localhost:5002");
+});
 var app = builder.Build();
 
 // endpoints de health
