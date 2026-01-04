@@ -10,7 +10,7 @@ namespace FCG.TechChallenge.Jogos.Functions.Functions
 
         [Function(nameof(NotifyPurchaseCompleted))]
         public async Task Run(
-            [ServiceBusTrigger("mytopic", "mysubscription", Connection = "")]
+            [ServiceBusTrigger("mytopic", "mysubscription", Connection = "ServiceBus:ConnectionString")]
             ServiceBusReceivedMessage message,
             ServiceBusMessageActions messageActions)
         {

@@ -61,7 +61,8 @@ builder.Services.AddHttpClient<IPagamentoIntegrationService, PagamentoIntegratio
     // IMPORTANTE: Esta URL deve ser onde o SEU projeto de Pagamentos está rodando.
     // Se for Docker, geralmente é o nome do container: http://pagamentos-api
     // Se for rodando local no Visual Studio, pode ser algo como http://localhost:5002
-    client.BaseAddress = new Uri("http://localhost:5002");
+    var url = builder.Configuration["PaymentServiceUrl"] ?? "http://localhost:5002";
+    client.BaseAddress = new Uri(url);
 });
 var app = builder.Build();
 

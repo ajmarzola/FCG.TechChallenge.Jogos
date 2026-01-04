@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 env:
-  AZURE_FUNCTIONAPP_PACKAGE_PATH: '.' # set this to the path to your web app project, defaults to the repository root
+  AZURE_FUNCTIONAPP_PACKAGE_PATH: 'src/FCG.TechChallenge.Jogos.Functions' # set this to the path to your web app project, defaults to the repository root
   DOTNET_VERSION: '8.0' # set this to the dotnet version to use
 
 jobs:
@@ -33,21 +33,18 @@ jobs:
         shell: bash
         run: |
           pushd './${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}'
-          dotnet build --configuration Release --output ./output
+          dotnet publish --configuration Release --output ./output
           popd
       
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_80DDE36817A647788C3ADD2012868183 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_9FD542BB0B4A42278D0738CF540CDAB0 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E6CB9CB2EF834C969F905D5622D86410 }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: 'Run Azure Functions Action'
         uses: Azure/functions-action@v1
         id: fa
         with:
-          app-name: 'func-fiap-jogos-jobs'
+          app-name: 'jogos-azfunc-fzgzbhbsbuejc2bk'
           slot-name: 'Production'
           package: '${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}/output'
-          

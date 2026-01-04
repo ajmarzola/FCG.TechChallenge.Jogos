@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "src\\FCG.TechChallenge.Jogos.Functions\\FCG.TechChallenge.Jogos.Functions.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "src\\FCG.TechChallenge.Jogos.Api\\FCG.TechChallenge.Jogos.Api.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
