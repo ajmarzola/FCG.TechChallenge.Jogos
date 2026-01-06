@@ -171,3 +171,7 @@
 /.env
 /tests/FCG.TechChallenge.Jogos.ElasticSearchTests/obj
 /tests/FCG.TechChallenge.Jogos.ElasticSearchTests/bin/Debug/net8.0
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Release/net8.0
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Debug/net8.0/FCG.TechChallenge.Jogos.IntegrationTests.assets.cache
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Debug/net8.0/FCG.TechChallenge.Jogos.IntegrationTests.GeneratedMSBuildEditorConfig.editorconfig
+/tests/FCG.TechChallenge.Jogos.IntegrationTests/obj/Debug/net8.0/FCG.TechChallenge.Jogos.IntegrationTests.GlobalUsings.g.cs
