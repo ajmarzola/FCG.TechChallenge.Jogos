@@ -44,7 +44,6 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
             });
 
             services.Configure<ServiceBusOptions>(configuration.GetSection("ServiceBus"));
-            services.Configure<ElasticOptions>(configuration.GetSection("Elastic"));
 
             // Repositório de leitura
             services.AddScoped<IJogosReadRepository, JogosReadRepository>();

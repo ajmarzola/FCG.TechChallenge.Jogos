@@ -26,4 +26,7 @@
     <ProjectReference Include="..\FCG.TechChallenge.Jogos.Application\FCG.TechChallenge.Jogos.Application.csproj" />
     <ProjectReference Include="..\FCG.TechChallenge.Jogos.Infrastructure\FCG.TechChallenge.Jogos.Infrastructure.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controllers\Admin\" />
+  </ItemGroup>
 </Project>
