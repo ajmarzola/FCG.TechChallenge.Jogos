@@ -5,9 +5,6 @@
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "ServiceBus:ConnectionString": "Endpoint=sb://rg-fiap-jogos-prod.servicebus.windows.net/;SharedAccessKeyName=apidejogos;SharedAccessKey=FZKeKOg8vjcNp5ahOD0dwD5fRPSXKNCQ/+ASbIMjCno=",
     "ServiceBus:QueueName": "jogos-outbox",
-    "Elasticsearch:Uri": "https://api-jogos-es-ad94fa.es.eastus.azure.elastic.cloud",
-    "Elasticsearch:ApiKey": "bVltQWlwc0JvUERqTW4zMXVqdDU6QTNUY054QmN6Sjc5QkpoSEJFZUdkdw==",
-    "Elasticsearch:IndexName": "jogos",
     "Postgres": "Host=dpg-d32oka3uibrs73a1qk0g-a.oregon-postgres.render.com;Port=5432;Database=fcg_games_db;Username=usr_fcg;Password=RTfpEwPmwVkGMjF5ObSgpLbtfBhIDigG;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Maximum Pool Size=50"
   }
 }

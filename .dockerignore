@@ -1,3 +1,5 @@
+**/.dockerignore
+````````
 **/.classpath
 **/.dockerignore
 **/.env

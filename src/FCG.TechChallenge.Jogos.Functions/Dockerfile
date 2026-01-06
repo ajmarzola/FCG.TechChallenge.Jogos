@@ -35,14 +35,11 @@ RUN dotnet publish "FCG.TechChallenge.Jogos.Functions.csproj" -c $BUILD_CONFIGUR
 # =======================
 #   Etapa de Runtime
 # =======================
-FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0 AS final
+FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0 AS base
 WORKDIR /home/site/wwwroot
-
-# Copia o resultado da publicação
-COPY --from=publish /app/publish .
-
-# Expõe porta (não obrigatório, mas ajuda em debug local)
 EXPOSE 8080
 
-# Comando de inicialização do Azure Functions
+FROM base AS final
+WORKDIR /home/site/wwwroot
+COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "FCG.TechChallenge.Jogos.Functions.dll"]
