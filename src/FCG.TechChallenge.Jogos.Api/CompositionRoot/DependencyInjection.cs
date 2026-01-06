@@ -1,7 +1,5 @@
 ﻿using FCG.TechChallenge.Jogos.Application.Abstractions;
 using FCG.TechChallenge.Jogos.Application.Commands.Jogos.CreateJogo;
-using FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogo;
-using FCG.TechChallenge.Jogos.Application.Commands.Jogos.UpdateJogoPreco;
 using FCG.TechChallenge.Jogos.Application.Queries.Jogos;
 using FCG.TechChallenge.Jogos.Infrastructure.Config.Options;
 using FCG.TechChallenge.Jogos.Infrastructure.EventStore;
@@ -9,7 +7,6 @@ using FCG.TechChallenge.Jogos.Infrastructure.Messaging.ServiceBus;
 using FCG.TechChallenge.Jogos.Infrastructure.Outbox;
 using FCG.TechChallenge.Jogos.Infrastructure.ReadModels.Sql;
 using FluentValidation;
-using MediatR;
 using System.Reflection;
 
 namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
@@ -47,7 +44,6 @@ namespace FCG.TechChallenge.Jogos.Api.CompositionRoot
             });
 
             services.Configure<ServiceBusOptions>(configuration.GetSection("ServiceBus"));
-            services.Configure<ElasticOptions>(configuration.GetSection("Elastic"));
 
             // Repositório de leitura
             services.AddScoped<IJogosReadRepository, JogosReadRepository>();

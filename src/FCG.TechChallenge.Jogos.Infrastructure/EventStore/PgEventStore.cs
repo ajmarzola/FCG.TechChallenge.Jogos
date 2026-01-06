@@ -30,9 +30,9 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
             {
                 var currentVersion = await conn.ExecuteScalarAsync<int?>(
                     new CommandDefinition(
-                        @"SELECT COALESCE(MAX(""Version""), 0)
-                      FROM ""Events""
-                      WHERE ""StreamId"" = @StreamId;",
+                        @"SELECT COALESCE(MAX(""version""), 0)
+                      FROM ""events""
+                      WHERE ""streamid"" = @StreamId;",
                         new { StreamId = streamId }, tx, cancellationToken: ct)) ?? 0;
 
                 if (currentVersion != expectedVersion)
@@ -51,8 +51,8 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
 
                     await conn.ExecuteAsync(
                         new CommandDefinition(
-                            @"INSERT INTO ""Events""
-                          (""StreamId"", ""Version"", ""EventId"", ""Type"", ""Data"", ""Metadata"", ""CreatedUtc"")
+                            @"INSERT INTO ""events""
+                          (""streamid"", ""version"", ""eventid"", ""type"", ""data"", ""metadata"", ""created_utc"")
                           VALUES (@StreamId, @Version, @EventId, @Type, @Data, @Metadata, (NOW() AT TIME ZONE 'UTC'));",
                             new
                             {
@@ -80,10 +80,10 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
             await using var conn = new NpgsqlConnection(_cs);
             var rows = await conn.QueryAsync<(string Type, string Data)>(
                 new CommandDefinition(
-                    @"SELECT ""Type"", ""Data""
-                  FROM ""Events""
-                  WHERE ""StreamId"" = @StreamId
-                  ORDER BY ""Version"";",
+                    @"SELECT ""type"", ""data""
+                  FROM ""events""
+                  WHERE ""streamId"" = @StreamId
+                  ORDER BY ""version"";",
                     new { StreamId = streamId }, cancellationToken: ct));
 
             var list = new List<object>();

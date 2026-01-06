@@ -16,8 +16,8 @@ namespace FCG.TechChallenge.Jogos.Infrastructure.EventStore
 
             await conn.ExecuteAsync(
                 new CommandDefinition(
-                    @"INSERT INTO ""OutboxMessages""
-                  (""Id"", ""Type"", ""Payload"", ""CreatedUtc"")
+                    @"INSERT INTO ""outboxmessages""
+                  (""id"", ""type"", ""payload"", ""created_utc"")
                   VALUES (@Id, @Type, @Payload, (NOW() AT TIME ZONE 'UTC'));",
                     new { Id = Guid.NewGuid(), Type = type, Payload = payload }, cancellationToken: ct));
         }
