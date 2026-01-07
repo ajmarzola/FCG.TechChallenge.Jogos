@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jogos-api
+  namespace: default
+  labels:
+    app: jogos-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jogos-api
+  template:
+    metadata:
+      labels:
+        app: jogos-api
+    spec:
+      containers:
+      - name: jogos-api
+        image: jogos-api:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: ASPNETCORE_ENVIRONMENT
+          value: "Production"
+        # Database Connection
+        - name: ConnectionStrings__Postgres
+          valueFrom:
+            secretKeyRef:
+              name: jogos-api-secrets
+              key: ConnectionStrings__Postgres
+              optional: true
+        # Service Bus
+        - name: ServiceBus__ConnectionString
+          valueFrom:
+            secretKeyRef:
+              name: jogos-api-secrets
+              key: ServiceBus__ConnectionString
+              optional: true
+        - name: ServiceBus__QueueName
+          valueFrom:
+            configMapKeyRef:
+              name: jogos-api-config
+              key: ServiceBus__QueueName
+              optional: true
+        # Elasticsearch
+        - name: Elasticsearch__Uri
+          valueFrom:
+            configMapKeyRef:
+              name: jogos-api-config
+              key: Elasticsearch__Uri
+              optional: true
+        - name: Elasticsearch__ApiKey
+          valueFrom:
+            secretKeyRef:
+              name: jogos-api-secrets
+              key: Elasticsearch__ApiKey
+              optional: true
+        - name: Elasticsearch__IndexName
+          valueFrom:
+            configMapKeyRef:
+              name: jogos-api-config
+              key: Elasticsearch__IndexName
+              optional: true
+        # Payment Service
+        - name: PaymentServiceUrl
+          valueFrom:
+            configMapKeyRef:
+              name: jogos-api-config
+              key: PaymentServiceUrl
+              optional: true
+        - name: PaymentServiceApiKey
+          valueFrom:
+            secretKeyRef:
+              name: jogos-api-secrets
+              key: PaymentServiceApiKey
+              optional: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 15
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"

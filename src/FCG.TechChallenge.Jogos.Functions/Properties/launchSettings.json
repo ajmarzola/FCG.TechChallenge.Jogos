@@ -3,13 +3,6 @@
     "FCG.TechChallenge.Jogos.Functions": {
       "commandName": "Project",
       "commandLineArgs": "--port 7229"
-    },
-    "Container (Dockerfile)": {
-      "commandName": "Docker",
-      "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}",
-      "containerRunArguments": "--init",
-      "httpPort": 33403,
-      "useSSL": false
     }
   }
 }

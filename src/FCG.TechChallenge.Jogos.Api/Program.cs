@@ -60,12 +60,18 @@ builder.Services.AddHttpClient<IPagamentoIntegrationService, PagamentoIntegratio
     // Se for rodando local no Visual Studio, pode ser algo como http://localhost:5002
     var url = builder.Configuration["PaymentServiceUrl"] ?? "http://localhost:5002";
     client.BaseAddress = new Uri(url);
+
+    var key = builder.Configuration["PaymentServiceApiKey"];
+    if (!string.IsNullOrWhiteSpace(key))
+    {
+        client.DefaultRequestHeaders.Add("x-functions-key", key);
+    }
 });
 var app = builder.Build();
 
 // endpoints de health
-app.MapHealthChecks("/health/live");
-app.MapHealthChecks("/health/ready");
+// app.MapHealthChecks("/health/live");
+// app.MapHealthChecks("/health/ready");
 
 // Middleware Prometheus (expõe /metrics)
 app.UseHttpMetrics();          // métricas de request/latência
