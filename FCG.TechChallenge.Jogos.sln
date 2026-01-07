@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36429.23
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -22,8 +22,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.TechChallenge.Jogos.Contracts", "src\FCG.TechChallenge.Jogos.Contracts\FCG.TechChallenge.Jogos.Contracts.csproj", "{D2E4639D-64D8-4815-AD0C-CD949202EBEE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FCG.TechChallenge.Jogos.Api", "src\FCG.TechChallenge.Jogos.Api\FCG.TechChallenge.Jogos.Api.csproj", "{557173E2-E216-4336-9F1D-6608D483ABEE}"
-EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{94960338-7828-4061-8930-019904791337}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -131,12 +129,6 @@ Global
 		{557173E2-E216-4336-9F1D-6608D483ABEE}.Release|x64.Build.0 = Release|Any CPU
 		{557173E2-E216-4336-9F1D-6608D483ABEE}.Release|x86.ActiveCfg = Release|Any CPU
 		{557173E2-E216-4336-9F1D-6608D483ABEE}.Release|x86.Build.0 = Release|Any CPU
-		{94960338-7828-4061-8930-019904791337}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{94960338-7828-4061-8930-019904791337}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{94960338-7828-4061-8930-019904791337}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{94960338-7828-4061-8930-019904791337}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{94960338-7828-4061-8930-019904791337}.Release|x64.ActiveCfg = Release|Any CPU
-		{94960338-7828-4061-8930-019904791337}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
