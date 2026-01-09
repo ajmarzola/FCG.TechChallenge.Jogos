@@ -18,6 +18,7 @@ public class ComprasController : ControllerBase
     }
 
     [HttpPost] // POST: api/compras
+    [Route("ComprarJogo")]
     public async Task<IActionResult> ComprarJogo([FromBody] PagamentoRequestDto pedido)
     {
         // 1. Opcional: Aqui você validaria se o jogo existe no seu banco de dados local

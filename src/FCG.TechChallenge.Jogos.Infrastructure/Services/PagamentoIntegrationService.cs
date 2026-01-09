@@ -27,7 +27,8 @@ public class PagamentoIntegrationService : IPagamentoIntegrationService
         {
             // PASSO A: Faz a chamada POST para o outro microsserviço
             // "api/pagamentos" é o final da URL (Endpoint)
-            var resposta = await _httpClient.PostAsJsonAsync("api/pagamentos", dadosPagamento);
+            var url = "http://a29d5e3bbf3a242d38ffd06f4de2dde4-e5d3375aa4afc161.elb.sa-east-1.amazonaws.com/payments";
+            var resposta = await _httpClient.PostAsJsonAsync(url, dadosPagamento);
 
             // PASSO B: Verifica se a requisição chegou lá (Código 200-299)
             if (!resposta.IsSuccessStatusCode)

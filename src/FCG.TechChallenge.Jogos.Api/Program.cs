@@ -67,6 +67,9 @@ builder.Services.AddHttpClient<IPagamentoIntegrationService, PagamentoIntegratio
         client.DefaultRequestHeaders.Add("x-functions-key", key);
     }
 });
+
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 // endpoints de health
@@ -85,6 +88,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Habilita rotas dos controllers (ex: api/Compras/ComprarJogo)
+app.MapControllers();
 
 // ---------- ENDPOINTS EXISTENTES ----------
 app.MapJogoCommands();
@@ -117,6 +123,7 @@ app.MapGet("/health/ready", async () =>
 })
 .WithName("HealthReadiness");
 
+app.MapControllers();
 // ---------- PÚBLICO: busca ----------
 app.MapGet("/jogos/search", async (
     string? q,
